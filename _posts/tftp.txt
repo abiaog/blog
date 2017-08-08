@@ -1,0 +1,322 @@
+   Link: profile
+   Link: pingback
+   Link: dns-prefetch
+   Link: dns-prefetch
+   Link: dns-prefetch
+   Link: LearningFromU » Feed (alternate)
+   Link: LearningFromU » Comments Feed (alternate)
+   Link: LearningFromU » Trivial File Transfer Protocol (TFTP) Installation. Comments Feed (alternate)
+   Link: RSD (EditURI)
+   Link: wlwmanifest
+   Link: NFS: Network File System protocol (previous)
+   Link: U-boot: ARM Versatile Express Emulation On Qemu With NFS as Rootfs (next)
+   Link: canonical
+   Link: shortlink
+   Link: alternate
+   Link: alternate
+   Link: LearningFromU (search)
+   Link: WordPress.com (search)
+   Link: amphtml
+   LearningFromU
+   Connecting Dots …
+   [IMG]
+   Skip to content
+
+     * Home
+     * About
+
+   ← NFS: Network File System protocol
+                                                                               U-boot: ARM Versatile Express Emulation On Qemu With NFS as Rootfs →
+
+Trivial File Transfer Protocol (TFTP) Installation.
+
+   Posted on November 26, 2016 by VinayMahadev
+
+   Install and Test TFTP Server in Host Ubuntu machine:
+
+     *  TFTP, a lightweight file transfer protocol, uses other software to get running: xinetd.
+     * The xinetd program performs  a neat job:  it waits for  network connections on  ports (as specified  in the/etc/services file)  and, when  a
+       connection occurs, remaps the standard in  and out to the read and write of the network connection.
+     * This trick means that the program run by  xinetd has code that uses file semantics (like scanf()  and printf()) and reads and writes over  a
+       network connection.
+     * Not all distributions have xinetd installed by default, so you may need to install it using your distribution’s package-management system.
+
+   1. Install following packages.
+
+ $ sudo apt-get install xinetd tftpd tftp
+
+   2. Create /etc/xinetd.d/tftp and put this entry
+
+ # default: off
+ # description: The tftp server serves files using the trivial file transfer
+ # protocol. The tftp protocol is often used to boot diskless
+ # workstations, download configuration files to network-aware printers,
+ # and to start the installation process for some operating systems.
+ service tftp
+ {
+ socket_type = dgram
+ protocol = udp
+ wait = yes
+ user = root
+ server = /usr/sbin/in.tftpd
+ server_args = -s /tftpboot
+ disable = no
+ per_source = 11s
+ cps = 100 2
+ }
+
+   The lines of interest in this file are server_args, which indicates the directory where TFTP stores and looks for files. The kernel that is
+   downloaded to the board needs to be placed in this directory.
+
+   3. Create a folder /tftpboot this should match whatever you gave in server_args. mostly it will be tftpboot
+
+ $ sudo mkdir /tftpboot
+ $ sudo chmod -R 777 /tftpboot
+ $ sudo chown -R nobody /tftpboot
+
+   4. Restart the xinetd service.
+
+ $ sudo /etc/init.d/xinetd restart
+
+   Now  tftp server will be up and starts running.
+
+   5. Create a file named test with some content in /tftpboot path of the tftp server
+
+ $ touch   /tftpboot/test
+ $ sudo chmod -R 777 /tftpboot
+
+   Obtain the ip address of the tftp server using: ifconfig command.
+
+   example we will consider the ip address as 192.168.1.2
+
+   6. Now in some other terminal and folder  follow the following steps.
+
+ $ tftp 192.168.1.2
+ tftp> get test
+ Sent 159 bytes in 0.0 seconds
+ tftp> quit
+ $ ls test
+
+   You can try the same test on another computer on the network, to ensure that you can connect to the host from another machine (across the  wire,
+   as a network-person would say). If TFTP works from localhost but not from another computer, chances are the firewall is still running. Stop this
+   service, and try again.
+
+   Let me know if you have any questions or comments.
+
+   Reference:
+
+   Pro Embedded Linux
+
+   Advertisements
+
+  You can Share it:
+
+     * Twitter
+     * Facebook
+     * Google
+     * Email
+     * LinkedIn
+     * Tumblr
+     * WhatsApp
+     * Skype
+     * 
+
+
+
+
+
+  Like this:
+   Like Loading...
+
+  Related
+
+About VinayMahadev
+
+   I am passionate about Embedded Linux systems . I believe in "If you want to learn something, read about it. If you want to understand something,
+   write about it. If you want to master something, teach it". Here I am just trying to connect the Dots.
+   View all posts by VinayMahadev →
+   Gallery | This entry was posted in Uncategorized. Bookmark the permalink.
+   ← NFS: Network File System protocol
+                                                                               U-boot: ARM Versatile Express Emulation On Qemu With NFS as Rootfs →
+
+  One Response to Trivial File Transfer Protocol (TFTP) Installation.
+
+    1. Pingback: U-boot: ARM Versatile Express Emulation On Qemu With NFS as Rootfs | LearningFromU
+
+  Leave a Reply Cancel reply
+
+   Enter your comment here...
+   _____________________
+
+   Fill in your details below or click an icon to log in:
+
+     * 
+
+     * 
+
+     * 
+
+     * 
+
+     * IFrame: googleplus-sign-in
+
+   Gravatar
+   Email (required) (Address never made public)
+   _____________________
+   Name (required)
+   _____________________
+   Website
+   _____________________
+
+   WordPress.com Logo
+
+   You are commenting using your WordPress.com account. ( Log Out / Change )
+
+   Twitter picture
+
+   You are commenting using your Twitter account. ( Log Out / Change )
+
+   Facebook photo
+
+   You are commenting using your Facebook account. ( Log Out / Change )
+
+   Google+ photo
+
+   You are commenting using your Google+ account. ( Log Out / Change )
+
+                                                                                                                                             Cancel
+
+   Connecting to %s
+
+   [ ] Notify me of new comments via email.
+
+   [ Post Comment ]
+
+     * Search for: _____________________ [ Search ]
+     * Archives
+
+          * March 2017
+          * February 2017
+          * January 2017
+          * November 2016
+          * April 2016
+          * March 2016
+
+     * Meta
+
+          * Register
+          * Log in
+
+     * Archives
+
+          * March 2017 (1)
+          * February 2017 (1)
+          * January 2017 (2)
+          * November 2016 (4)
+          * April 2016 (4)
+          * March 2016 (1)
+
+     * No upcoming events
+
+   LearningFromU
+                                                                                                    Create a free website or blog at WordPress.com.
+   Send to Email Address _____________________ Your Name _____________________ Your Email Address _____________________ __________________________
+   loading [ Send Email ] Cancel
+   Post was not sent - check your email addresses!
+   Email check failed, please try again
+   Sorry, your blog cannot share posts by email.
+   IFrame: likes-master
+   %d bloggers like this:
+
+References
+
+   Visible links
+   . http://gmpg.org/xfn/11
+   . https://learningfromyoublog.wordpress.com/xmlrpc.php
+   . https://s2.wp.com/
+   . https://s1.wp.com/
+   . https://s0.wp.com/
+   . https://learningfromyoublog.wordpress.com/feed/
+   . https://learningfromyoublog.wordpress.com/comments/feed/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/feed/
+   . https://learningfromyoublog.wordpress.com/xmlrpc.php?rsd
+   . https://s1.wp.com/wp-includes/wlwmanifest.xml
+   . https://learningfromyoublog.wordpress.com/2016/11/26/nfs-network-file-system-protocol/
+   . https://learningfromyoublog.wordpress.com/2016/11/27/u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/
+   . http://wp.me/p7goQM-b7
+   . https://public-api.wordpress.com/oembed/1.0/?format=json&url=https%3A%2F%2Flearningfromyoublog.wordpress.com%2F2016%2F11%2F26%2Ftrivial-file-transfer-protocol-tftp-installation%2F&for=wpcom-auto-discovery
+   . https://public-api.wordpress.com/oembed/1.0/?format=xml&url=https%3A%2F%2Flearningfromyoublog.wordpress.com%2F2016%2F11%2F26%2Ftrivial-file-transfer-protocol-tftp-installation%2F&for=wpcom-auto-discovery
+   . https://learningfromyoublog.wordpress.com/osd.xml
+   . https://s1.wp.com/opensearch.xml
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/amp/
+   . LearningFromU
+	https://learningfromyoublog.wordpress.com/
+   . https://learningfromyoublog.wordpress.com/
+   . Skip to content
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#content
+   . https://learningfromyoublog.wordpress.com/
+   . https://learningfromyoublog.wordpress.com/about/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/nfs-network-file-system-protocol/
+   . https://learningfromyoublog.wordpress.com/2016/11/27/u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/
+   . 12:21 PM
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/
+   . View all posts by VinayMahadev
+	https://learningfromyoublog.wordpress.com/author/vinaymahadev/
+   . Click to share on Twitter
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=twitter
+   . Share on Facebook
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=facebook
+   . Click to share on Google+
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=google-plus-1
+   . Click to email
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=email
+   . Click to share on LinkedIn
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=linkedin
+   . Click to share on Tumblr
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=tumblr
+   . Click to share on WhatsApp
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/whatsapp://send?text=Trivial%20File%20Transfer%20Protocol%20%28TFTP%29%20Installation. https%3A%2F%2Flearningfromyoublog.wordpress.com%2F2016%2F11%2F26%2Ftrivial-file-transfer-protocol-tftp-installation%2F
+   . Click to share on Skype
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/?share=skype
+   . https://learningfromyoublog.wordpress.com/author/vinaymahadev/
+   . View all Gallery posts
+	https://learningfromyoublog.wordpress.com/type/gallery/
+   . https://learningfromyoublog.wordpress.com/category/uncategorized/
+   . Permalink to Trivial File Transfer Protocol (TFTP) Installation.
+	https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/nfs-network-file-system-protocol/
+   . https://learningfromyoublog.wordpress.com/2016/11/27/u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs/
+   . https://learningfromyoublog.wordpress.com/2016/11/27/u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs/
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#respond
+   . https://public-api.wordpress.com/connect/?googleplus-sign-in=https%3A%2F%2Flearningfromyoublog.wordpress.com
+   . https://gravatar.com/site/signup/
+   . javascript:HighlanderComments.doExternalLogout( 'wordpress' );
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#
+   . javascript:HighlanderComments.doExternalLogout( 'twitter' );
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#
+   . javascript:HighlanderComments.doExternalLogout( 'facebook' );
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#
+   . javascript:HighlanderComments.doExternalLogout( 'googleplus' );
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#
+   . javascript:HighlanderComments.cancelExternalWindow();
+   . https://learningfromyoublog.wordpress.com/2017/03/
+   . https://learningfromyoublog.wordpress.com/2017/02/
+   . https://learningfromyoublog.wordpress.com/2017/01/
+   . https://learningfromyoublog.wordpress.com/2016/11/
+   . https://learningfromyoublog.wordpress.com/2016/04/
+   . https://learningfromyoublog.wordpress.com/2016/03/
+   . https://wordpress.com/start/account/user?ref=wplogin
+   . https://learningfromyoublog.wordpress.com/wp-login.php
+   . https://learningfromyoublog.wordpress.com/2017/03/
+   . https://learningfromyoublog.wordpress.com/2017/02/
+   . https://learningfromyoublog.wordpress.com/2017/01/
+   . https://learningfromyoublog.wordpress.com/2016/11/
+   . https://learningfromyoublog.wordpress.com/2016/04/
+   . https://learningfromyoublog.wordpress.com/2016/03/
+   . LearningFromU
+	https://learningfromyoublog.wordpress.com/
+   . https://wordpress.com/?ref=footer_website
+   . https://learningfromyoublog.wordpress.com/2016/11/26/trivial-file-transfer-protocol-tftp-installation/#cancel
+   . https://widgets.wp.com/likes/master.html?ver=20170206#ver=20170206

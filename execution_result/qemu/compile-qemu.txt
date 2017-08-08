@@ -1,0 +1,13 @@
+	LINK  arm-softmmu/qemu-system-arm
+	AS    optionrom/multiboot.o
+	Building optionrom/multiboot.img
+	Building optionrom/multiboot.raw
+	Signing optionrom/multiboot.bin
+	AS    optionrom/linuxboot.o
+	Building optionrom/linuxboot.img
+	Building optionrom/linuxboot.raw
+	Signing optionrom/linuxboot.bin
+	AS    optionrom/kvmvapic.o
+	Building optionrom/kvmvapic.img
+	Building optionrom/kvmvapic.raw
+	Signing optionrom/kvmvapic.bin

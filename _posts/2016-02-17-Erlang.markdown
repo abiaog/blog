@@ -1,0 +1,15 @@
+---
+layout: post
+title:  "Erlang"
+date:   2016-02-17 
+categories: jekyll update
+---
+
+
+# Reference
+
+[Learn you some Erlang](http://learnyousomeerlang.com/content)
+
+[Erlang入门](http://www.blogjava.net/killme2008/archive/2007/06/13/123860.html)
+
+[Functions](http://erlang.org/doc/reference_manual/functions.html)

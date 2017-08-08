@@ -1,0 +1,30 @@
+---
+layout: post
+title:  "xilinx"
+date:   2017-04-28 
+categories: jekyll update
+---
+
+
+# Interrupt
+
+
+
+
+
+
+# AXI
+
+NetFPGA10G主要使用了其中的轻量级AXI4-lite（后文简写为axi）以及AXI4-stream（后文 简写为axis）两者。前者用于CPU与ip core之间的通信；后者用于各ip core之间进行高速数据传输。如果将整个构架分为控制层面与数据层面，则axi主要负责控制层面，axis主要负责数据层面。
+
+
+
+
+# Reference
+
+
+
+[AXI 4总线简介](http://www.eefocus.com/guozhiyang/blog/14-04/303214_5869f.html)
+
+
+

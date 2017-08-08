@@ -1,0 +1,612 @@
+   Link: alternate (handheld)
+   Link: RSS (alternate)
+
+海枫的专栏
+
+  Linux内核架构师/Linux底层机制/高级语言/设计模式/网络协议/安全技术
+
+     * [IMG]目录视图
+     * [IMG]摘要视图
+     * [IMG]订阅
+
+   CSDN日报20170319——《人工智能风口， Python 程序员的狂欢与企业主的哀嚎》      程序员2月书讯      博客一键搬家活动开始啦
+
+                                                          从零使用qemu模拟器搭建arm运行环境
+
+                                                                                                                        标签： kernelqemuarmbusybox
+                                                                                                    2015-07-04 15:26 18031人阅读 评论(10) 收藏 举报
+   本文章已收录于：
+   分类：
+   kernel（5）
+   作者同类文章X
+
+   版权声明：本文为博主原创文章，承蒙转载请注明作者和出处
+
+                                                                  为什么会有这篇文章
+
+   早在2011年的时候，跟当时同事一起讨论，做Linux系统开发正处于整个Linux开发中间层，没有上层的C/C++业务和数据库的开发经验，也没有底层的内核和驱动开
+   发经验，到底路该如何走……基于对Linux系统开发的理解和内核的兴趣，认为选择Linux内核开发更适合自己。于是到淘宝上买了块三星s3c2440(arm 9)开发板，学起
+   内核开发。没有过多久，机缘巧合，正式加入了公司的内核开发部。就这样跟内核和arm打上交道了。
+
+   没有想到这一做就是3年了，arm芯片只有在公司才能使用，回到家里就不能访问了。去年（2014）开始觉得做内核久了，应该向内核社区提交patch，提升知名度和
+   影响力。但在公司提交patch不方便，于是在家里通过qemu方式搭建于ARM A9的运行环境，进行开发和测试验证，一口气提交了好几个patch（link1, link2, link3,
+   link4, link5）并被社区接纳了。
+
+   最近在梳理Linux内存机制，无论是《深入理解Linux内核》还是《深入理解内核架构》这两本红宝书都无法告知你每个细节的时候，就需要查看代码细节，修改代码
+   ，甚致做行为分析。此时需要修改代码输出调试信息，以帮助更深入体会代码的逻辑。这该是qemu派上场的时候。
+
+   其实我前前后后搭建qemu+arm的运行环境已超过5次了，每次都要花上很多时间。碰巧昨天有同事看到我再次搭建，他如搭珍宝，告诉我一定要将搭建qemu的方法告
+   诉他。
+
+   所以，如果你想买个开发板来做arm + linux嵌入式开发，完全可以使用qemu进行开发。或者你像我一样，对内核机制关心，而不关心于具体的外设器件，最多是关
+   心arm架构相关的功能，也可以使用qemu进行开发。
+
+   一句话：搭建qemu+arm环境，用于做内核开发和功能分析调试。
+
+                                                                       搭建环境
+
+   我整个搭建过程都是在笔记本上进行的，Ubuntu 12.04系统；如果是Fodera环境，搭建过程可能略有不同，但关键步骤是不变的。
+
+   qemu模拟得最好的arm芯片，要数ARM公司的vexpress A9开发板了，本文的搭建过程都是围绕这个开发板进行的。当然，如果你想搭其它开发板，也不难，只要qemu
+   和内核对它有成熟的支持就够了。
+
+   下面是step by step的搭建过程，建议没有特别诉求的朋友，按照下在面的步骤操作。或者先根据下面的步骤成功搭建vexpress运行环境之后，再根据自己的需求进
+   行更改。
+
+                                                                    下载Linux内核
+
+   下载内核有两种方法，一种是用git直接下载内核代码树，方便后面的内核开发。另一种是直接到内核社区下载对应版本的源码包。我采用第一种方法，但后面发现
+   主线上3.18版本和后面版本的代码，使用这种搭建方法运行不起来。目前未查明问题的根因。如果读者想快速搭建成功，建议选用3.16版本的内核进行搭建。
+
+   方法一：使用git
+
+   git clonegit://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+
+   方法二：直接下载3.16源代码包
+
+   wget https://www.kernel.org/pub/linux/kernel/v3.x/linux-3.16.tar.xz
+
+                                                               安装arm的交叉编译工具链
+
+   想必做嵌入式开发的朋友，对交叉编译工具链不陌生。如果你订制一个交叉编译工具链，建议你使用crosstool-ng开源软件来构建。但在这里建议直接安装arm的交
+   叉编译工具链：
+
+   sudo apt-get install gcc-arm-linux-gnueabi
+
+                                                                    编译Linux内核
+
+   生成vexpress开发板子的config文件：
+
+   make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm vexpress_defconfig
+
+   编译：
+
+   make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm
+
+   生成的内核镱像位于arch/arm/boot/zImage， 后续qemu启动时需要使用该镜像。
+
+                                                                 下载和安装qemu模拟器
+
+   其实Ubuntu 12.04有qemu的安装包，但由于版本较低，对vexpress开发板支持不友好，建议下载高版本的qemu:
+
+   wget http://wiki.qemu-project.org/download/qemu-2.0.2.tar.bz2
+
+   配置qemu前，需要安装几个软件包：
+
+   sudo apt-get install zlib1g-dev
+
+   sudo apt-get install libglib2.0-0
+
+ sudo apt-get install libglib2.0-dev
+
+   配置qemu，支持模拟arm架构下的所有单板：
+
+   ./configure --target-list=arm-softmmu --audio-drv-list=
+
+   编译和安装：
+
+   make
+
+   make install
+
+                                                              测试qemu和内核能否运行成功
+
+   qemu已经安装好了，内核也编译成功了，到这里最好是测试一下，编译出来的内核是否OK，或者qemu对vexpress单板支持是否够友好。
+
+   运行命令很简单：
+
+   qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/ivan/kernel_git/linux/arch/arm/boot/zImage -nographic -append "console=ttyAMA0"
+
+   如果看到内核启动过程中的打印，说明前的搭建是成功的。
+
+   这里简单介绍下qemu命令的参数：
+
+   -M vexpress-a9 模拟vexpress-a9单板，你可以使用-M ?参数来获取该qemu版本支持的所有单板
+
+   -m 512M 单板运行物理内存512M
+
+   -kernel /home/ivan/kernel_git/linux/arch/arm/boot/zImage  告诉qemu单板运行内核镜像路径
+
+   -nographic 不使用图形化界面，只使用串口
+
+   -append "console=ttyAMA0" 内核启动参数，这里告诉内核vexpress单板运行，串口设备是哪个tty。
+
+   注意：
+
+   我每次搭建，都忘了内核启动参数中的console=参数应该填上哪个tty，因为不同单板串口驱动类型不尽相同，创建的tty设备名当然也是不相同的。那vexpress单板
+   的tty设备名是哪个呢？ 其实这个值可以从生成的.config文件CONFIG_CONSOLE宏找到。
+
+   如果搭建其它单板，需要注意内核启动参数的console=参数值，同样地，可从生成的.config文件中找到。
+
+                                                                    制作根文件系统
+
+   到这里是否大功告成了呢？ 其实在上面的测试中，你会发现内核报panic，因为内核找不到根文件系统，无法启init进程。
+
+   根文件系统要考虑两个方面：
+
+   1. 根文件系统的内容
+
+       如果你看过《Linux From Scratch》，相信你会对这一步产生恐惧感，但如果一直从事嵌入式开发，就可以放下心来。根文件系统就是简单得不能再简单的几个
+   命令集和态动态而已。为什么Linux From Scratch会有那么复杂，是因为它要制作出一个Linux发生版。但在嵌入式领域，几乎所有的东西，都是mini版本，根文件
+   系统也不例外。
+
+      本文制本的根文件系统 = busybox(包含基础的Linux命令)  + 运行库 + 几个字符设备
+
+   2. 根文件系统放在哪里
+
+       其实依赖于每个开发板支持的存储设备，可以放到Nor Flash上，也可以放到SD卡，甚至外部磁盘上。最关键的一点是你要清楚知道开发板有什么存储设备。
+
+       本文直接使用SD卡做为存储空间，文件格式为ext3格式
+
+下载、编译和安装busybox
+
+    wget http://www.busybox.net/downloads/busybox-1.20.2.tar.bz2
+
+   make defconfig
+
+   make CROSS_COMPILE=arm-linux-gnueabi-
+
+   make install CROSS_COMPILE=arm-linux-gnueabi-
+
+   安装完成后，会在busybox目录下生成_install目录，该目录下的程序就是单板运行所需要的命令。
+
+形成根目录结构
+
+   先在Ubuntu主机环境下，形成目录结构，里面存放的文件和目录与单板上运行所需要的目录结构完全一样，然后再打包成镜像（在开发板看来就是SD卡），这个临时
+   的目录结构称为根目录
+   1.  创建rootfs目录（根目录），根文件系统内的文件全部放到这里
+
+   sudo mkdir rootfs
+
+   2. 拷贝busybox命令到根目录下
+
+   sudo cp busybox-1.20.2/_install/* -r rootfs/
+
+   3. 从工具链中拷贝运行库到lib目录下
+
+   sudo cp -P /usr/arm-linux-gnueabi/lib/* rootfs/lib/
+
+   4. 创建4个tty端终设备
+
+   sudo mknodrootfs/dev/tty1 c 4 1
+
+   sudo mknod rootfs/dev/tty2c 4 2
+
+   sudo mknod rootfs/dev/tty3c 4 3
+
+   sudo mknod rootfs/dev/tty4c 4 4
+
+制作根文件系统镜像
+
+   1. 生成32M大小的镜像
+
+    dd if=/dev/zero of=a9rootfs.ext3 bs=1M count=32
+
+   2. 格式化成ext3文件系统
+
+   mkfs.ext3 a9rootfs.ext3
+
+   3.  将文件拷贝到镜像中
+
+   sudo mkdir tmpfs
+
+   sudo mount -t ext3 a9rootfs.ext3 tmpfs/ -o loop
+
+    cp -r rootfs/*  tmpfs/
+
+   sudo umount tmpfs
+
+                                                                     系统启动运行
+
+   完成上述所有步骤之后，就可以启动qemu来模拟vexpress开发板了，命令参数如下：
+
+   qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/ivan/qemu/linux/arch/arm/boot/zImage -nographic -append "root=/dev/mmcblk0 
+   console=ttyAMA0" -sd a9rootfs.ext3
+
+   从内核启动打印，到命令行提示符出现，激动人心的时刻出现了……
+
+                                                                     写在后面的话
+
+   通过上面的步骤，搭建出来一个最小的qemu+arm开发环境，你可以上面的基础上修改内核，或者增加一些测试程序在单板上运行，甚至使用单板的flash设备。
+   在此，你可以做纯arm架构的内核开发，或者与架构无关的内核开发，也可以做单板相关的驱动开发。
+
+   顶
+                                                                              8
+
+   踩
+                                                                              0
+
+    
+    
+
+     * 上一篇如何编写绑定端口shellcode
+     * 下一篇谈谈Linux应用程序 ABI兼容性
+
+    我的同类文章
+
+   kernel（5）
+   http://blog.csdn.net
+
+  参考知识库
+
+   更多资料请参考：
+
+   猜你在找
+
+   查看评论
+   * 以上用户言论只代表其个人观点，不代表CSDN网站的观点或立场
+   快速回复 TOP
+
+     个人资料
+
+                                                                      访问我的空间
+                                                                         linyt
+     1 2
+
+        * 访问：427301次
+        * 积分：5492
+                                                                         * 等级：
+                                                                         积分：5492
+        * 排名：第4005名
+
+        * 原创：91篇
+        * 转载：6篇
+        * 译文：11篇
+        * 评论：317条
+
+     如何联系我
+
+     email: lyt2008bj at 163 dot com 新浪微博: http://weibo.com/ivanwb 微信
+
+     博客专栏
+
+           深入浅出缓冲区溢出攻击
+
+     [IMG] 文章：11篇
+
+           阅读：40239
+
+     文章分类
+
+     * C/C++/linux(39)
+     * java技术(3)
+     * systemTap语言详解(6)
+     * 好文收藏(4)
+     * 心情日记(2)
+     * 算法研究(5)
+     * 网络技术(2)
+     * 读书笔记(0)
+     * 谈天说地(16)
+     * kernel(6)
+     * 深入浅出缓冲区溢出攻击(11)
+     * 程序员思维(4)
+     * 如何学习(4)
+     * 聊聊glibc(5)
+     * SQL注入(5)
+
+     文章存档
+
+     * 2017年02月(1)
+     * 2016年11月(5)
+     * 2016年10月(3)
+     * 2016年08月(2)
+     * 2016年07月(3)
+     * 2016年06月(4)
+     * 2016年03月(2)
+     * 2016年02月(2)
+     * 2015年12月(4)
+     * 2015年11月(2)
+     * 2015年09月(2)
+     * 2015年08月(1)
+     * 2015年07月(2)
+     * 2015年02月(7)
+     * 2015年01月(3)
+     * 2014年01月(1)
+     * 2011年09月(1)
+     * 2011年07月(2)
+     * 2011年05月(1)
+     * 2011年04月(1)
+     * 2010年10月(1)
+     * 2010年08月(1)
+     * 2010年07月(2)
+     * 2010年02月(3)
+     * 2010年01月(4)
+     * 2009年07月(1)
+     * 2009年06月(1)
+     * 2009年04月(1)
+     * 2009年03月(1)
+     * 2009年02月(1)
+     * 2009年01月(3)
+     * 2008年12月(4)
+     * 2008年10月(1)
+     * 2008年09月(2)
+     * 2008年08月(2)
+     * 2008年04月(1)
+     * 2008年01月(1)
+     * 2007年12月(1)
+     * 2007年11月(1)
+     * 2007年10月(1)
+     * 2007年08月(4)
+     * 2007年07月(3)
+     * 2007年06月(3)
+     * 2007年04月(4)
+     * 2007年03月(2)
+     * 2007年01月(1)
+     * 2006年12月(4)
+     * 2006年01月(1)
+     * 2005年12月(1)
+     * 2005年08月(3)
+     * 2005年05月(1)
+
+     阅读排行
+
+     * 巧夺天工的kfifo(25465)
+     * 从零使用qemu模拟器搭建arm运行环境(18009)
+     * 从汇编层面深度剖析C++虚函数(16560)
+     * kernel 网桥代码分析(15383)
+     * 轻轻松松通过Usb安装Ubuntu(14330)
+     * 如何学习（4）：利用旧知识理解新知识(14178)
+     * arm-linux启动过程(11986)
+     * tcpdump高级用法(9868)
+     * 希尔伯特第十问题(8694)
+     * 使用ROP攻击技术(8603)
+
+     评论排行
+
+     * 从汇编层面深度剖析C++虚函数(33)
+     * kernel 网桥代码分析(29)
+     * 巧夺天工的kfifo(25)
+     * 使用ROP攻击技术(16)
+     * 使用ret2plt绕过libc安全区(15)
+     * 回首2016——平淡、忙碌和沉淀(15)
+     * arm-linux启动过程(13)
+     * select函数与I/O多路转接(11)
+     * 1等于0.循环9吗？(10)
+     * 从零使用qemu模拟器搭建arm运行环境(10)
+
+     最新评论
+
+     * Java中的对象类型像引用还是指针，谁是谁非？
+
+       liujunpen: 不错
+
+     * arm-linux启动过程
+
+       RL1327532152: 请问博主，那栈，为什么要预留8个字节？？最后有答案了吗
+
+     * SQL注入基础
+
+       linyt: @zozo555:不需要吧，我也是不懂php的
+
+     * SQL注入基础
+
+       zozo555: (｡･ω･｡)学习中很受用问下博主，我在学注入前要先去学下PHP嘛。。。
+
+     * 缓冲区溢出攻击实践
+
+       linyt: @newzq:用od -t x1就可以按16进制显示了，然后再用sed在每个byte前面加\x之类的...
+
+     * 巧夺天工的kfifo(修订版）
+
+       linyt: @craigtao:写比读快时，队列空间会满，写入会失败。从代码中就可以看出来吧
+
+     * 巧夺天工的kfifo(修订版）
+
+       linyt: @craigtao:写比读快时，队列空间会满，定入失败。
+
+     * 巧夺天工的kfifo(修订版）
+
+       craigtao: 首先感谢楼主的分享，我一直一直这么用的，在嵌入式端和服务器应用端，楼主有没有想过，写过快的时候，会出...
+
+     * 回首2016——平淡、忙碌和沉淀
+
+       daidaineteasy: 学习了！！
+
+     * 回首2016——平淡、忙碌和沉淀
+
+       u010018421: 很好，赞，我要向你学习
+
+     友情链接
+
+        * 阮一峰的网络日志 (RSS)
+        * CoolShell
+        * haskell语言规范
+        * 万物皆数
+
+   收藏助手
+   IFrame: fa
+
+References
+
+   Visible links
+   . http://blog.csdn.net/linyt/article/details/42504975#
+   . http://blog.csdn.net/linyt/rss/list
+   . http://blog.csdn.net/linyt
+   . http://blog.csdn.net/linyt?viewmode=contents
+   . http://blog.csdn.net/linyt?viewmode=contents
+   . http://blog.csdn.net/linyt?viewmode=list
+   . http://blog.csdn.net/linyt?viewmode=list
+   . http://blog.csdn.net/linyt/rss/list
+   . http://blog.csdn.net/linyt/rss/list
+   . http://blog.csdn.net/blogdevteam/article/details/63692002
+   . http://blog.csdn.net/turingbooks/article/details/58072986
+   . http://blog.csdn.net/blogdevteam/article/details/60961185
+   . http://blog.csdn.net/linyt/article/details/42504975
+   . http://www.csdn.net/tag/kernel
+   . http://www.csdn.net/tag/qemu
+   . http://www.csdn.net/tag/arm
+   . http://www.csdn.net/tag/busybox
+   . http://blog.csdn.net/linyt/article/details/42504975#comments
+   . 收藏
+	javascript:void(0);
+   . 举报
+	http://blog.csdn.net/linyt/article/details/42504975#report
+   . http://blog.csdn.net/linyt/article/category/851992
+   . https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=9c986661638c69772f5479c4715061239ec61b29
+   . https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=c2459d35f5b8de077fde859b8c96a23f309b9ab2
+   . https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=20cb6abfe0062693183eb2a85f7c73792e96407f
+   . https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=207a6cb06990c298d0eac982e053d370e216d93d
+   . https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=279f487e0b471577e2b3c134e2ff9af939129d0f
+   . http://crosstool-ng.org/
+   . http://www.linuxfromscratch.org/lfs/view/stable/
+   . javascript:void(0);
+   . http://blog.csdn.net/linyt/article/details/43838061
+   . http://blog.csdn.net/linyt/article/details/46841845
+   . http://blog.csdn.net/
+   . 访问我的空间
+	http://my.csdn.net/linyt
+   . http://my.csdn.net/linyt
+   . http://blog.csdn.net/column/details/buffer-overflow.html
+   . http://blog.csdn.net/column/details/buffer-overflow.html
+   . http://blog.csdn.net/linyt/article/category/267839
+   . http://blog.csdn.net/linyt/article/category/178965
+   . http://blog.csdn.net/linyt/article/category/645022
+   . http://blog.csdn.net/linyt/article/category/139323
+   . http://blog.csdn.net/linyt/article/category/125385
+   . http://blog.csdn.net/linyt/article/category/123819
+   . http://blog.csdn.net/linyt/article/category/329619
+   . http://blog.csdn.net/linyt/article/category/273621
+   . http://blog.csdn.net/linyt/article/category/261653
+   . http://blog.csdn.net/linyt/article/category/851992
+   . http://blog.csdn.net/linyt/article/category/2868109
+   . http://blog.csdn.net/linyt/article/category/5954821
+   . http://blog.csdn.net/linyt/article/category/6029687
+   . http://blog.csdn.net/linyt/article/category/6267121
+   . http://blog.csdn.net/linyt/article/category/6504525
+   . http://blog.csdn.net/linyt/article/month/2017/02
+   . http://blog.csdn.net/linyt/article/month/2016/11
+   . http://blog.csdn.net/linyt/article/month/2016/10
+   . http://blog.csdn.net/linyt/article/month/2016/08
+   . http://blog.csdn.net/linyt/article/month/2016/07
+   . http://blog.csdn.net/linyt/article/month/2016/06
+   . http://blog.csdn.net/linyt/article/month/2016/03
+   . http://blog.csdn.net/linyt/article/month/2016/02
+   . http://blog.csdn.net/linyt/article/month/2015/12
+   . http://blog.csdn.net/linyt/article/month/2015/11
+   . http://blog.csdn.net/linyt/article/month/2015/09
+   . http://blog.csdn.net/linyt/article/month/2015/08
+   . http://blog.csdn.net/linyt/article/month/2015/07
+   . http://blog.csdn.net/linyt/article/month/2015/02
+   . http://blog.csdn.net/linyt/article/month/2015/01
+   . http://blog.csdn.net/linyt/article/month/2014/01
+   . http://blog.csdn.net/linyt/article/month/2011/09
+   . http://blog.csdn.net/linyt/article/month/2011/07
+   . http://blog.csdn.net/linyt/article/month/2011/05
+   . http://blog.csdn.net/linyt/article/month/2011/04
+   . http://blog.csdn.net/linyt/article/month/2010/10
+   . http://blog.csdn.net/linyt/article/month/2010/08
+   . http://blog.csdn.net/linyt/article/month/2010/07
+   . http://blog.csdn.net/linyt/article/month/2010/02
+   . http://blog.csdn.net/linyt/article/month/2010/01
+   . http://blog.csdn.net/linyt/article/month/2009/07
+   . http://blog.csdn.net/linyt/article/month/2009/06
+   . http://blog.csdn.net/linyt/article/month/2009/04
+   . http://blog.csdn.net/linyt/article/month/2009/03
+   . http://blog.csdn.net/linyt/article/month/2009/02
+   . http://blog.csdn.net/linyt/article/month/2009/01
+   . http://blog.csdn.net/linyt/article/month/2008/12
+   . http://blog.csdn.net/linyt/article/month/2008/10
+   . http://blog.csdn.net/linyt/article/month/2008/09
+   . http://blog.csdn.net/linyt/article/month/2008/08
+   . http://blog.csdn.net/linyt/article/month/2008/04
+   . http://blog.csdn.net/linyt/article/month/2008/01
+   . http://blog.csdn.net/linyt/article/month/2007/12
+   . http://blog.csdn.net/linyt/article/month/2007/11
+   . http://blog.csdn.net/linyt/article/month/2007/10
+   . http://blog.csdn.net/linyt/article/month/2007/08
+   . http://blog.csdn.net/linyt/article/month/2007/07
+   . http://blog.csdn.net/linyt/article/month/2007/06
+   . http://blog.csdn.net/linyt/article/month/2007/04
+   . http://blog.csdn.net/linyt/article/month/2007/03
+   . http://blog.csdn.net/linyt/article/month/2007/01
+   . http://blog.csdn.net/linyt/article/month/2006/12
+   . http://blog.csdn.net/linyt/article/month/2006/01
+   . http://blog.csdn.net/linyt/article/month/2005/12
+   . http://blog.csdn.net/linyt/article/month/2005/08
+   . http://blog.csdn.net/linyt/article/month/2005/05
+   . 巧夺天工的kfifo
+	http://blog.csdn.net/linyt/article/details/5764312
+   . 从零使用qemu模拟器搭建arm运行环境
+	http://blog.csdn.net/linyt/article/details/42504975
+   . 从汇编层面深度剖析C++虚函数
+	http://blog.csdn.net/linyt/article/details/6336762
+   . kernel 网桥代码分析
+	http://blog.csdn.net/linyt/article/details/5191512
+   . 轻轻松松通过Usb安装Ubuntu
+	http://blog.csdn.net/linyt/article/details/1837879
+   . 如何学习（4）：利用旧知识理解新知识
+	http://blog.csdn.net/linyt/article/details/50383462
+   . arm-linux启动过程
+	http://blog.csdn.net/linyt/article/details/6582399
+   . tcpdump高级用法
+	http://blog.csdn.net/linyt/article/details/1936073
+   . 希尔伯特第十问题
+	http://blog.csdn.net/linyt/article/details/4296663
+   . 使用ROP攻击技术
+	http://blog.csdn.net/linyt/article/details/48738757
+   . 从汇编层面深度剖析C++虚函数
+	http://blog.csdn.net/linyt/article/details/6336762
+   . kernel 网桥代码分析
+	http://blog.csdn.net/linyt/article/details/5191512
+   . 巧夺天工的kfifo
+	http://blog.csdn.net/linyt/article/details/5764312
+   . 使用ROP攻击技术
+	http://blog.csdn.net/linyt/article/details/48738757
+   . 使用ret2plt绕过libc安全区
+	http://blog.csdn.net/linyt/article/details/47429823
+   . 回首2016——平淡、忙碌和沉淀
+	http://blog.csdn.net/linyt/article/details/53967738
+   . arm-linux启动过程
+	http://blog.csdn.net/linyt/article/details/6582399
+   . select函数与I/O多路转接
+	http://blog.csdn.net/linyt/article/details/1722445
+   . 1等于0.循环9吗？
+	http://blog.csdn.net/linyt/article/details/5726232
+   . 从零使用qemu模拟器搭建arm运行环境
+	http://blog.csdn.net/linyt/article/details/42504975
+   . http://blog.csdn.net/linyt/article/details/1573864#comments
+   . http://blog.csdn.net/liujunpen
+   . http://blog.csdn.net/linyt/article/details/6582399#comments
+   . http://blog.csdn.net/RL1327532152
+   . http://blog.csdn.net/linyt/article/details/52894072#comments
+   . http://blog.csdn.net/linyt
+   . http://blog.csdn.net/linyt/article/details/52894072#comments
+   . http://blog.csdn.net/zozo555
+   . http://blog.csdn.net/linyt/article/details/43283331#comments
+   . http://blog.csdn.net/linyt
+   . http://blog.csdn.net/linyt/article/details/53355355#comments
+   . http://blog.csdn.net/linyt
+   . http://blog.csdn.net/linyt/article/details/53355355#comments
+   . http://blog.csdn.net/linyt
+   . http://blog.csdn.net/linyt/article/details/53355355#comments
+   . http://blog.csdn.net/craigtao
+   . http://blog.csdn.net/linyt/article/details/53967738#comments
+   . http://blog.csdn.net/daidaineteasy
+   . http://blog.csdn.net/linyt/article/details/53967738#comments
+   . http://blog.csdn.net/u010018421
+   . http://www.ruanyifeng.com/blog/
+   . http://www.ruanyifeng.com/blog/
+   . http://coolshell.cn/
+   . https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/index.html
+   . http://www.cnblogs.com/edward-bian/
+   . http://blog.csdn.net/linyt/article/details/

@@ -1,0 +1,262 @@
+---
+layout: post
+title:  "FreeRTOS"
+date:   2017-05-03 
+categories: jekyll update
+---
+
+# Definition: FreeRTOS Port
+
+FreeRTOS can be built with approximately twenty different compilers, and can run on more
+than thirty different processor architectures. Each supported combination of compiler and
+processor is considered to be a separate FreeRTOS port.
+
+
+
+# FreeRTOSConfig.h
+
+FreeRTOS is configured by a header file called FreeRTOSConfig.h.
+
+FreeRTOSConfig.h is used to tailor FreeRTOS for use in a specific application. For example, FreeRTOSConfig.h contains constants such as configUSE_PREEMPTION, the setting of which defines whether the co-operative or pre-emptive scheduling algorithm will be used . As FreeRTOSConfig.h contains application specific definitions, it should be located in a directory that is part of the application being built, not in a directory that contains the FreeRTOS source code.
+
+
+# The Top Directories in the FreeRTOS Distribution
+
+The first and second level directories of the FreeRTOS distribution are shown and described in Figure 1.
+
+	FreeRTOS
+	│ │
+	│ ├─`Source` Directory containing the FreeRTOS source files
+	│ │
+	│ └─`Demo` Directory containing pre-configured and port specific FreeRTOS demo projects
+	│
+	FreeRTOS-Plus
+	 │
+	 ├─`Source` Directory containing source code for some FreeRTOS+ ecosystem components
+	 │
+	 └─`Demo` Directory containing demo projects for FreeRTOS+ ecosystem components
+
+Figure 1. Top level directories within the FreeRTOS distribution
+
+
+
+
+
+# FreeRTOS Source Files Common to All Ports
+
+	FreeRTOS
+	 │
+	 └─Source
+	 │
+	 ├─tasks.c FreeRTOS source file - always required
+	 ├─list.c FreeRTOS source file - always required
+	 ├─queue.c FreeRTOS source file - nearly always required
+	 ├─timers.c FreeRTOS source file - optional
+	 ├─event_groups.c FreeRTOS source file - optional
+	 └─croutine.c FreeRTOS source file - optional
+
+Figure 2. Core FreeRTOS source files within the FreeRTOS directory tree
+
+
+
+
+
+# FreeRTOS Source Files Specific to a Port
+
+Source files specific to a FreeRTOS port are contained within the `FreeRTOS/Source/portable` directory. The portable directory is arranged as a hierarchy, first by compiler, then by processor architecture. This is shown in Figure 3.  If you are running FreeRTOS on a processor with architecture ‘architecture’ using compiler ‘compiler’ then, in addition to the core FreeRTOS source files, you must also build the files located in `FreeRTOS/Source/portable/[compiler]/[architecture]` directory.
+
+
+
+
+
+# Demo Applications
+
+A note to Linux users: FreeRTOS is developed and tested on a Windows host. 
+
+
+# Memory Management
+
+
+One embedded / real time system can have very different RAM and timing requirements to another - so a single RAM allocation algorithm will only ever be appropriate for a subset of applications.
+
+To get around this problem, FreeRTOS keeps the memory allocation API in its portable layer. The portable layer is outside of the source files that implement the core RTOS functionality, allowing an application specific implementation appropriate for the real time system being developed to be provided. When the RTOS kernel requires RAM, instead of calling malloc(), it instead calls pvPortMalloc(). When RAM is being freed, instead of calling free(), the RTOS kernel calls vPortFree().
+
+FreeRTOS offers several heap management schemes that range in complexity and features. It is also possible to provide your own heap implementation, and even to use two heap implementations simultaneously. Using two heap implementations simultaneously permits task stacks and other RTOS objects to be placed in fast internal RAM, and application data to be placed in slower external RAM.
+
+- Heap_3
+
+Heap_3.c uses the standard library malloc() and free() functions, so the size of the heap is defined by the linker configuration, and the configTOTAL_HEAP_SIZE setting has no affect. Heap_3 makes malloc() and free() thread-safe by temporarily suspending the FreeRTOS scheduler. Thread safety, and scheduler suspension, are both topics that are covered in Chapter 7, Resource Management.
+
+- Heap_4 
+
+Heap_4 uses a first fit algorithm to allocate memory. Unlike heap_2, heap_4 combines (coalescences) adjacent free blocks of memory into a single larger block, which minimizes the risk of memory fragmentation.  The first fit algorithm ensures pvPortMalloc() uses the first free block of memory that is large enough to hold the number of bytes requested. For example, consider the scenario where:
+The heap contains three blocks of free memory that, in the order in which they appear in the array, are 5 bytes, 200 bytes, and 100 bytes, respectively.  pvPortMalloc() is called to request 20 bytes of RAM.  The first free block of RAM into which the requested number of bytes will fit is the 200-byte block, so pvPortMalloc() splits the 200-byte block into one block of 20 bytes, and one block of 180 bytes1 , before returning a pointer to the 20-byte block. The new 180-byte block remains available to future calls to pvPortMalloc().
+
+
+##  Heap Related Utility Functions
+
+- The xPortGetFreeHeapSize() API Function
+
+- The xPortGetMinimumEverFreeHeapSize() API Function
+
+- Malloc Failed Hook Functions
+
+
+[FreeRTOS Stack and Heap Management](https://www.youtube.com/watch?v=bLQWB4H0TpE&t=83s)
+
+
+[Memory Management](http://www.freertos.org/a00111.html)
+
+
+
+
+# Interrupt
+
+## Cascade Mode
+
+When the system requires more than 32 interrupts, it is necessary to expand the AXI INTC
+core capability to handle more interrupt. This can be achieved by setting the parameters
+related to Cascade Mode in the core. For additional details, see Cascade Mode Interrupt in
+Chapter 3.
+
+
+
+For Cascade mode, Interrupt IDs are generated in xparameters.h
+as shown below:
+
+	    Master/Primary INTC
+		 ______
+		|      |-0      Secondary INTC
+		|      |-.         ______
+		|      |-.        |      |-32        Last INTC
+		|      |-.        |      |-.          ______
+		|______|<-31------|      |-.         |      |-64
+			          |      |-.         |      |-.
+			          |______|<-63-------|      |-.
+			                             |      |-.
+			                             |______|-95
+
+
+
+[AXI INTC](https://www.xilinx.com/support/documentation/ip_documentation/axi_intc/v4_1/pg099-axi-intc.pdf)
+
+
+
+## Interrupt Vector Tables
+
+./mp0_bsp/microblaze_0/libsrc/intc_v3_5/src/xintc.h
+
+The interrupt vector table for each interrupt controller device is declared
+statically in xintc_g.c within the configuration data for each instance.
+The device ID of the interrupt controller device is used by the driver as a
+direct index into the configuration data table - to retrieve the vector table
+for an instance of the interrupt controller. The user should populate the
+vector table with handlers and callbacks at run-time using the XIntc_Connect()
+and XIntc_Disconnect() functions.
+
+Each vector table entry corresponds to a device that can generate an
+interrupt. Each entry contains an interrupt handler function and an argument
+to be passed to the handler when an interrupt occurs.  The tools default this
+argument to the base address of the interrupting device.  Note that the
+device driver interrupt handlers given in this file do not take a base
+address as an argument, but instead take a pointer to the driver instance.
+This means that although the table is created statically, the user must still
+use XIntc_Connect() when the interrupt handler takes an argument other than
+the base address. This is only to say that the existence of the static vector
+tables should not mislead the user into thinking they no longer need to
+register/connect interrupt handlers with this driver.
+
+
+# I2C
+
+
+
+# 6.4 Binary Semaphores Used for Synchronization
+
+The interrupt safe version of the Binary Semaphore API can be used to unblock a task each
+time a particular interrupt occurs, effectively synchronizing the task with the interrupt. This
+allows the majority of the interrupt event processing to be implemented within the
+synchronized task, with only a very fast and short portion remaining directly in the ISR. As
+described in the previous section, the binary semaphore is used to ‘defer’ interrupt processing
+to a task.
+
+
+
+
+
+# 7.3 Mutexes (and Binary Semaphores)
+
+A Mutex is a special type of binary semaphore that is used to control access to a resource that
+is shared between two or more tasks. The word MUTEX originates from ‘MUTual EXclusion’.
+configUSE_MUTEXES must be set to 1 in FreeRTOSConfig.h for mutexes to be available.
+
+
+Even though mutexes and binary semaphores share many characteristics, the scenario shown
+in Figure 63 (where a mutex is used for mutual exclusion) is completely different to that shown
+in Figure 53 (where a binary semaphore is used for synchronization). The primary difference
+is what happens to the semaphore after it has been obtained:
+
+* A semaphore that is used for mutual exclusion must always be returned.
+
+* A semaphore that is used for synchronization is normally discarded and not returned.
+
+![mutex.png](https://s19.postimg.org/l0mn26g7l/mutex.png)
+
+
+
+
+
+
+[Mastering the FreeRTOS Real Time Kernel - a Hands On Tutorial Guide](http://www.freertos.org/Documentation/161204_Mastering_the_FreeRTOS_Real_Time_Kernel-A_Hands-On_Tutorial_Guide.pdf)
+
+
+
+
+# Task Notifications
+
+Each RTOS task has a 32-bit notification value. An RTOS task notification is an event sent directly to a task that can unblock the receiving task, and optionally update the receiving task's notification value.
+Task notifications can update the receiving task's notification value in the following ways:
+
+- Set the receiving task's notification value without overwriting a previous value
+- Overwrite the receiving task's notification value
+- Set one or more bits in the receiving task's notification value
+- Increment the receiving task's notification value
+
+That flexibility allows task notifications to be used where previously it would have been necessary to create a separate queue, binary semaphore, counting semaphore or event group. Unblocking an RTOS task with a direct notification is 45% faster * and uses less RAM than unblocking a task with a binary semaphore.
+Notifications are sent using the xTaskNotify() and xTaskNotifyGive() API functions (and their interrupt safe equivalents), and remain pending until the receiving RTOS task calls either of the xTaskNotifyWait() or ulTaskNotifyTake() API functions.
+
+[xTaskNotifyFromISR()](http://www.freertos.org/xTaskNotifyFromISR.html)
+
+[RTOS Task Notifications](http://www.freertos.org/RTOS-task-notifications.html)
+
+
+# SPI
+
+
+[spi协议及工作原理分析](http://blog.csdn.net/skyflying2012/article/details/11710801)
+
+
+[Overview of Linux kernel SPI support](https://www.kernel.org/doc/Documentation/spi/spi-summary)
+
+
+
+
+# lwIP 
+
+[lwIP - A Lightweight TCP/IP stack](http://savannah.nongnu.org/projects/lwip/)
+
+
+[LightWeight IP Application Examples](https://www.xilinx.com/support/documentation/application_notes/xapp1026.pdf)
+
+[SocketTest v3.0.0 Test My Socket](http://sockettest.sourceforge.net/)
+
+
+
+
+# Reference
+
+[Mastering_the_FreeRTOS_Real_Time_Kernel-A_Hands-On_Tutorial_Guide](http://www.freertos.org/Documentation/161204_Mastering_the_FreeRTOS_Real_Time_Kernel-A_Hands-On_Tutorial_Guide.pdf)
+
+
+
+

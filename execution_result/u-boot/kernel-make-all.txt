@@ -1,0 +1,12 @@
+baohua@baohua-VirtualBox:~/develop/linux$ sudo make ARCH=arm CROSS_COMPILE=/home/baohua/develop/ARM_Cross_Tools/arm-2014.05/bin/arm-none-linux-gnueabi- all
+.......................
+LD      arch/arm/boot/compressed/vmlinux
+OBJCOPY arch/arm/boot/zImage
+Kernel: arch/arm/boot/zImage is ready
+DTC     arch/arm/boot/dts/vexpress-v2p-ca5s.dtb
+DTC     arch/arm/boot/dts/vexpress-v2p-ca9.dtb
+DTC     arch/arm/boot/dts/vexpress-v2p-ca15-tc1.dtb
+DTC     arch/arm/boot/dts/vexpress-v2p-ca15_a7.dtb
+Building modules, stage 2.
+MODPOST 0 modules
+

@@ -1,0 +1,98 @@
+---
+layout: post
+title:  "makefile"
+date:   2017-03-22 
+categories: jekyll update
+---
+
+
+
+# 4.6 Phony Targets
+
+
+A phony target is one that is not really the name of a file; rather it is just a name for a recipe to be executed when you make an explicit request. There are two reasons to use a phony target: to avoid a conflict with a file of the same name, and to improve performance.
+
+
+Phony targets are also useful in conjunction with recursive invocations of make. In this situation the makefile will often contain a variable which lists a number of sub-directories to be built.
+
+	SUBDIRS = foo bar baz
+
+	.PHONY: subdirs $(SUBDIRS)
+
+	subdirs: $(SUBDIRS)
+
+	$(SUBDIRS):
+		$(MAKE) -C $@
+
+	foo: baz
+
+
+
+
+
+
+
+# Variables
+
+	objects = main.o kbd.o command.o display.o \
+	       insert.o search.o files.o utils.o
+
+	edit : $(objects)
+	     cc -o edit $(objects)
+
+
+# 10. Using Implicit Rules
+
+Implicit rules tell make how to use customary techniques so that you do not have to specify them in detail when you want to use them. For example, there is an implicit rule for C compilation. File names determine which implicit rules are run. For example, C compilation typically takes a .c file and makes a .o file. So make applies the implicit rule for C compilation when it sees this combination of file name endings.
+
+
+# 10.2 Catalogue of Built-In Rules
+
+To see the full list of default rules and variables available in your version of GNU make, run ‘make -p’ in a directory with no makefile.
+
+Not all of these rules will always be defined, even when the ‘-r’ option is not given. Many of the predefined implicit rules are implemented in make as suffix rules, so which ones will be defined depends on the suffix list (the list of prerequisites of the special target .SUFFIXES).
+
+
+
+
+
+# Variable Assignment
+
+
+* Lazy Set
+
+VARIABLE = value
+
+Normal setting of a variable - values within it are recursively expanded when the variable is used, not when it's declared
+
+* Immediate Set
+
+VARIABLE := value
+
+Setting of a variable with simple expansion of the values inside - values within it are expanded at declaration time.
+
+* Set If Absent
+
+VARIABLE ?= value
+
+Setting of a variable only if it doesn't have a value
+
+* Append
+
+VARIABLE += value
+
+Appending the supplied value to the existing value (or setting to that value if the variable didn't exist)
+
+
+
+
+# Reference
+
+[GNU make](https://www.gnu.org/software/make/manual/make.html#SEC_Contents)
+
+[Makefile variable assignment](http://stackoverflow.com/questions/448910/makefile-variable-assignment)
+
+
+
+
+

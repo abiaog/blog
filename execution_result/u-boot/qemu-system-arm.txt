@@ -1,0 +1,23 @@
+baohua@baohua-VirtualBox:~/develop/u-boot$ /usr/bin/qemu-system-arm -M vexpress-a9 -m 512M -kernel u-boot -nographic
+pulseaudio: set_sink_input_volume() failed
+pulseaudio: Reason: Invalid argument
+pulseaudio: set_sink_input_mute() failed
+pulseaudio: Reason: Invalid argument
+
+
+U-Boot 2017.03-00270-g5cf618e (Mar 31 2017 - 16:54:14 +0800)
+
+DRAM:  512 MiB
+WARNING: Caches not enabled
+Flash: 256 MiB
+MMC:   MMC: 0
+*** Warning - bad CRC, using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   smc911x-0
+Hit any key to stop autoboot:  0 
+=> 
+
+

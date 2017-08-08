@@ -1,0 +1,163 @@
+---
+layout: post
+title:  "rootfs"
+date:   2016-02-13 
+categories: jekyll update
+---
+
+
+# Call Tree
+
+One of the important kernel boot parameters is "root=", which tells the kernel where to find the root filesystem. For instance, 
+
+	root=/dev/hda1
+
+This is commonly specified as what looks like a standard Unix pathname (as above). But standard Unix pathnames are interpreted according to currently-mounted filesystems. So how do you interpret the above root pathname, before you've even mounted any filesystems?
+
+It took me a few hours to decipher the answer to this (the following applies at least as of the 2.6.11 kernel sources). First of all, at kernel initialization time, there is an absolutely minimal filesystem registered, called "rootfs". 
+
+The code that implements this filesystem can be found in `fs/ramfs/inode.c`, which also happens to contain the code for the "ramfs" filesystem. rootfs is basically identical to ramfs, except for the specification of the MS_NOUSER flag; this is interpreted by the routine `graft_tree` in fs/namespace.c, and I think it prevents userland processes doing their own mounts of rootfs.
+
+	Important code,
+		fs/ramfs/inode.c
+		graft_tree
+
+The routine init_mount_tree (found in fs/namespace.c) is called at system startup time to mount an instance of rootfs, and make it the root namespace of the current process (remember that, under Linux, different processes can have different filesystem namespaces). This routine is called at the end of mnt_init (also in fs/namespace.c), as part of the following sequence:
+
+
+	asmlinkage void __init start_kernel(void)
+		vfs_caches_init(totalram_pages);
+		  mnt_init();
+		    err = sysfs_init(); /* causes sysfs to register itself--this is needed later for actually finding the root device */
+		    init_rootfs(); /* causes rootfs to register itself */
+		    init_mount_tree(); /* actually creates the initial filesystem namespace, with rootfs mounted at "/" */
+
+
+
+The actual interpretation of the `root=path` parameter is done in a routine called `name_to_dev_t`, found in init/do_mounts.c. This tries all the various syntaxes that are supported, one of which is the form "/dev/name", where name is interpreted by doing a temporary mount of the sysfs filesystem (at its usual place, /sys), and then looking for an entry under /sys/block/name (done in the subsidiary routine try_name in the same source file). name_to_dev_t is called from `prepare_namespace`, which in turn is called from init in init/main.c. This routine is spawned as the first process on the system (pid 1) by a call to kernel_thread in rest_init, which comes at the end of the abovementioned start_kernel.
+
+	start_kernel(void)
+		rest_init();
+			kernel_thread(kernel_init, NULL, CLONE_FS);
+				kernel_init(void *unused)
+					kernel_init_freeable(void)
+						prepare_namespace
+							name_to_dev_t 
+
+start_kernel is the very last routine called in the boot sequence after the kernel gets control from the bootloader (in arch/i386/kernel/head.S for the i386 architecture). It never returns, because the very last thing it does after all the initialization is call cpu_idle, which runs an endless loop for soaking up CPU time as long as the CPU doesn't have anything else to do (like run a process or service an interrupt).
+
+
+# ramfs in detail
+
+
+	init_ramfs_fs(void)
+		register_filesystem()
+
+ramfs的模块初始化函数：
+
+	static int __init init_ramfs_fs(void);
+
+调用内核函数register_filesystem()注册ramfs。
+关于ramfs的描述结构ramfs_fs_type的初始化如下：
+
+	static struct file_system_type ramfs_fs_type = { 
+	    .name       = "ramfs",
+	    .mount      = ramfs_mount,
+	    .kill_sb    = ramfs_kill_sb,
+	};
+
+"ramfs"为文件系统的名字。
+ramfs_mount为ramfs的挂载操作。
+ramfs_kill_sb为不再需要ramfs文件系统时执行相关清理工作。
+
+
+	int ramfs_fill_super(struct super_block *sb, void *data, int silent)
+	{
+		struct ramfs_fs_info *fsi;
+		struct inode *inode;
+		int err;
+
+		save_mount_options(sb, data); // 将文件系统的挂载参数保存到sb.s_options字段。该值用于generic_show_options() 函数对文件系统挂载参数的显示操作。
+
+		fsi = kzalloc(sizeof(struct ramfs_fs_info), GFP_KERNEL); // 分配ramfs特有的ramfs_fs_info结构。
+									// struct ramfs_fs_info {
+									// 	struct ramfs_mount_opts mount_opts;
+									// };
+									// 
+									// struct ramfs_mount_opts {
+									// 	umode_t mode;
+									// };
+
+
+		sb->s_fs_info = fsi; //  指向ramfs_fs_info结构的指针存放在ramfs的超级块的私有字段s_fs_info中。
+		if (!fsi)
+			return -ENOMEM;
+
+		err = ramfs_parse_options(data, &fsi->mount_opts); // 调用ramfs_parse_options()对挂载参数进行解析。将挂载参数“mode=XX”中的XX保存在ramfs_mount_opts的mode字段。默认值为0755。其他挂载参数都被忽略。
+
+		if (err)
+			return err;
+
+		
+		
+		
+		
+		
+		sb->s_maxbytes		= MAX_LFS_FILESIZE;   // 初始化超级块的s_maxbytes为MAX_LFS_FILESIZE。该字段表示最大的文件长度。
+		sb->s_blocksize		= PAGE_CACHE_SIZE;    // 初始化超级块的s_blocksize字段为PAGE_CACHE_SIZE。该字段表示文件系统块的长度，单位为字节。
+		sb->s_blocksize_bits	= PAGE_CACHE_SHIFT;   // 另一个字段为s_blocksize_bits字段，该字段也表示文件系统块的长度， 只是它为s_blocksize取以2为底的对数。
+		sb->s_magic		= RAMFS_MAGIC;        // 初始化超级块的s_magic字段，该字段为超级块的魔数，用于检查超级块的损坏。
+		sb->s_op		= &ramfs_ops;         // 初始化超级块的s_op字段为ramfs_ops。该结构包含了用于处理超级块的相关操作。
+							      /* 
+								static const struct super_operations ramfs_ops = { 
+									    .statfs     = simple_statfs, //给出文件系统的统计信息，例如使用和未使用的数据块的数目，或者文件件名的最大长度。  
+										.drop_inode = generic_delete_inode, //当inode的引用计数降为0时，将inode删除。
+										    .show_options   = generic_show_options, //用以显示文件系统装载的选项。
+								};
+							      */
+
+		sb->s_time_gran		= 1;                  // 初始化超级块的s_time_gran字段。它表示文件系统支持的各种时间戳的最大可能的粒度。单位为ns。
+
+		inode = ramfs_get_inode(sb, NULL, S_IFDIR | fsi->mount_opts.mode, 0); // 调用ramfs_get_inode()为ramfs超级块在生成一个代表根节点inode。并将inode各个字段进行初始化。最后，返回指向该根inode的指针。(具体操作详见下文分析。)
+		sb->s_root = d_make_root(inode); // 调用d_make_root()为根inode创建并初始化一个目录项。
+		if (!sb->s_root)
+			return -ENOMEM;
+
+		return 0;
+	}
+
+
+
+
+
+
+
+
+
+
+
+# LILO (boot loader) vs GRUB
+
+`LILO` (LInux LOader) is a boot loader for Linux and was the default boot loader for most Linux distributions in the years after the popularity of loadlin. Today, many distributions use `GRUB` as the default boot loader, but LILO and its variant ELILO are still in wide use. Further development of LILO was discontinued in December 2015 along with a request by Joachim Weidorn for potential developers.
+
+GNU `GRUB` (short for GNU GRand Unified Bootloader) is a boot loader package from the GNU Project. GRUB is the reference implementation of the Free Software Foundation's Multiboot Specification, which provides a user the choice to boot one of multiple operating systems installed on a computer or select a specific kernel configuration available on a particular operating system's partitions.
+
+
+
+
+# Reference
+
+
+[RootFileSystem](https://kernelnewbies.org/RootFileSystem)
+
+
+[从ramfs分析文件系统的设计和实现](http://blog.csdn.net/ganggexiongqi/article/details/8921643)
+
+[rootfs](http://blog.csdn.net/kevin_hcy/article/details/17663341)
+
+[ramfs, rootfs and initramfs - The Linux Kernel Archives](https://www.kernel.org/doc/Documentation/filesystems/ramfs-rootfs-initramfs.txt)
+
+  as same as `Documentation/filesystems/ramfs-rootfs-initramfs.txt`
+
+[From-PowerUp-To-Bash-Prompt-HOWTO-1](http://www.tldp.org/HOWTO/From-PowerUp-To-Bash-Prompt-HOWTO-1.html)
+

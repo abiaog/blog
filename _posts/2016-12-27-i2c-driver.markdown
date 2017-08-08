@@ -1,0 +1,213 @@
+---
+layout: post
+title:  "i2c driver"
+date:   2016-12-27 
+categories: jekyll update
+---
+
+
+# 2 架构
+Linux的I2C构架分为三个部分：
+1） I2C core框架
+    提供了核心数据结构的定义和相关接口函数，用来实现I2C适配器驱动和设备驱动的注册、注销管理，以及I2C通信方法上层的、与具体适配器无关的代码，为系统中每个I2C总线增加相应的读写方法。
+    I2C core框架具体实现在/drivers/i2c目录下的i2c-core.c和i2c-dev.c
+2） I2C总线驱动
+    定义描述具体I2C总线适配器的i2c_adapter数据结构、实现在具体I2C适配器上的I2C总线通信方法，并由i2c_algorithm数据结构进行描述。 经过I2C总线驱动的的代码，可以为我们控制I2C产生开始位、停止位、读写周期以及从设备的读写、产生ACK等。
+    I2C总线驱动具体实现在/drivers/i2c目录下busses文件夹。例如：Linux I2C GPIO总线驱动为i2c_gpio.c. I2C总线算法在/drivers/i2c目录下algos文件夹。例如：Linux I2C GPIO总线驱动算法实现在i2c_algo_bit.c.
+3） I2C 设备驱动
+    是对具体I2C硬件驱动的实现。I2C 设备驱动通过I2C适配器与CPU通信。其中主要包含i2c_driver和i2c_client数据结构，i2c_driver结构对应一套具体的驱动方法，例如：probe、remove、suspend等，需要自己申明。i2c_client数据结构由内核根据具体的设备注册信息自动生成，设备驱动根据硬件具体情况填充。具体使用下面介绍。
+    I2C 设备驱动具体实现放在在/drivers/i2c目录下chips文件夹 ???
+
+
+
+
+# 4.1  关键数据结构
+    在i2c.h头文件中定义了i2c_adapter、i2c_algorithm、i2c_driver和i2c_client 4个比较关键的数据结构。
+
+
+# 7 总结
+    7.1 理清i2c中的个结构体关系
+    通过上面的讲解，已基本上简单地介绍完i2c驱动的方方面面，或许你还是对这里面的众多结构体之间的联系很迷惑，下面就来分析一下 i2c_driver 、 i2c_client 、 i2c_adapter 和 i2c_algorithm 这 4 个数据结构的作用及其盘根错节的关系。
+    （1）i2c_adapter 与 i2c_algorithm
+    i2c_adapter 对应于物理上的一个适配器，而 i2c_algorithm 对应一套通信方法。一个 I2C 适配器需要 i2c_algorithm 中提供的通信函数来控制适配器上产生特定的访问周期。缺少 i2c_algorithm 的 i2c_adapter 什么也做不了，因此 i2c_adapter 中包含其使用的 i2c_algorithm 的指针。
+    i2c_algorithm 中的关键函数 master_xfer() 用于产生 I2C 访问周期需要的信号，以 i2c_msg （即 I2C 消息）为单位。 i2c_msg 结构体也非常关键，代码清单给出了它的定义。
+    1 struct i2c_msg {
+	    2  __u16 addr; /* 设备地址 */
+	    3   __u16 flags; /* 标志 */
+	    4   __u16 len;  /* 消息长度 */
+	    5   __u8 *buf;  /* 消息数据 */
+	    6 };
+   （2）i2c_driver 与 i2c_client
+i2c_driver 对应一套驱动方法，是纯粹的用于辅助作用的数据结构，它不对应于任何的物理实体。 i2c_client 对应于真实的物理设备，每个 I2C 设备都需要一个 i2c_client 来描述。 i2c_client 一般被包含在 i2c 字符设备的私有信息结构体中。
+i2c_driver 与 i2c_client 发生关联的时刻在 i2c_driver 的 attach_adapter() 函数被运行时。 attach_adapter() 会探测物理设备，当确定一个 client 存在时，把该 client 使用的 i2c_client 数据结构的 adapter 指针指向对应的 i2c_adapter 。
+driver 指针指向该 i2c_driver ，并会调用 i2c_adapter 的 client_register() 函数。相反的过程发生在 i2c_driver 的 detach_client() 函数被调用的时候。
+   （3）i2c_adpater 与 i2c_client
+i2c_adpater 与 i2c_client 的关系与 I2C 硬件体系中适配器和设备的关系一致，即 i2c_client 依附于 i2c_adpater 。由于一个适配器上可以连接多个 I2C 设备，所以一个 i2c_adpater 也可以被多个 i2c_client 依附， i2c_adpater 中包括依附于它的 i2c_client 的链表。
+
+
+# Call Tree 
+
+	struct bus_type i2c_bus_type = {
+		.name		= "i2c",
+		.match		= i2c_device_match,
+		.probe		= i2c_device_probe,
+		.remove		= i2c_device_remove,
+		.shutdown	= i2c_device_shutdown,
+	};
+
+	static int i2c_device_match(struct device *dev, struct device_driver *drv)
+	{
+		struct i2c_client	*client = i2c_verify_client(dev);
+		struct i2c_driver	*driver;
+
+		driver = to_i2c_driver(drv);
+		/* match on an id table if there is one */
+		if (driver->id_table)
+			return i2c_match_id(driver->id_table, client) != NULL;
+	}
+
+
+# Call Tree of i2c_transfer()
+
+drivers/i2c/i2c-core.c
+
+	int i2c_transfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
+		ret = __i2c_transfer(adap, msgs, num);
+			ret = adap->algo->master_xfer(adap, msgs, num);
+
+drivers/i2c/busses/i2c-s3c2410.c
+
+	static struct platform_driver s3c24xx_i2c_driver = {
+		.probe		= s3c24xx_i2c_probe,
+		.remove		= s3c24xx_i2c_remove,
+		.id_table	= s3c24xx_driver_ids,
+		.driver		= {
+			.name	= "s3c-i2c",
+			.pm	= S3C24XX_DEV_PM_OPS,
+			.of_match_table = of_match_ptr(s3c24xx_i2c_match),
+		},
+	};
+
+
+	static const struct i2c_algorithm s3c24xx_i2c_algorithm = {
+		.master_xfer		= s3c24xx_i2c_xfer,
+		.functionality		= s3c24xx_i2c_func,
+	};
+
+	/* s3c24xx_i2c_probe
+	 *
+	 * called by the bus driver when a suitable device is found
+	*/
+	static int s3c24xx_i2c_probe(struct platform_device *pdev)
+	{
+		struct s3c24xx_i2c *i2c;
+
+		i2c->adap.owner = THIS_MODULE;
+		i2c->adap.algo = &s3c24xx_i2c_algorithm;   // i2c_algorithm is installed here !!!
+		i2c->adap.retries = 2;
+
+		ret = i2c_add_numbered_adapter(&i2c->adap); // register i2c_adapter  !!!
+
+	}
+
+
+	/* s3c24xx_i2c_xfer
+	 *
+	 * first port of call from the i2c bus code when an message needs
+	 * transferring across the i2c bus.
+	*/
+
+	static int s3c24xx_i2c_xfer(struct i2c_adapter *adap,
+				struct i2c_msg *msgs, int num)
+	{
+		for (retry = 0; retry < adap->retries; retry++) {
+			ret = s3c24xx_i2c_doxfer(i2c, msgs, num);
+		}
+	}
+
+
+	/* s3c24xx_i2c_doxfer
+	 *
+	 * this starts an i2c transfer
+	*/
+
+	static int s3c24xx_i2c_doxfer(struct s3c24xx_i2c *i2c,
+				      struct i2c_msg *msgs, int num)
+	{
+
+
+		s3c24xx_i2c_message_start(i2c, msgs);
+	}
+
+
+	/* s3c24xx_i2c_message_start
+	 *
+	 * put the start of a message onto the bus
+	*/
+
+	static void s3c24xx_i2c_message_start(struct s3c24xx_i2c *i2c,
+					      struct i2c_msg *msg)
+	{
+		writel();
+	}
+
+
+# U-Boot i2c commands
+
+	=>?
+		// display all commands
+	=> i2c
+	i2c - I2C sub-system
+
+	Usage:
+	i2c dev [dev] - show or set current I2C bus
+	i2c probe [address] - test for and show device(s) on the I2C bus
+
+
+# 14.1 I2C时序初步认识
+
+
+![I2C通信流程解析](http://c.51hei.com/d/forum/201309/28/151347ngefv59bv5me0bpk.jpg)
+
+起始信号：UART通信是从一直持续的高电平出现一个低电平标志起始位；而I2C通信的起始信号的定义是SCL为高电平期间，SDA由高电平向低电平变化产生一个下降沿，表示起始信号，如图中的start部分所示。
+
+数据传输：首先，UART是低位在前，高位在后；而I2C通信是高位在前，低位在后。第二，UART通信数据位是固定长度，波特率分之一，一位一位固定时间发送完毕就可以了。而I2C没有固定波特率，但是有时序的要求，要求当SCL在低电平的时候，SDA允许变化，也就是说，发送方必须先保持SCL是低电平，才可以改变数据线SDA，输出要发送的当前数据的一位；而当SCL在高电平的时候，SDA绝对不可以变化，因为这个时候，接收方要来读取当前SDA的电平信号是0还是1，因此要保证SDA的稳定不变化，如图中的每一位数据的变化，都是在SCL的低电平位置。8为数据位后边跟着的是一位响应位，响应位我们后边还要具体介绍。
+
+停止信号：UART通信的停止位是一位固定的高电平信号；而I2C通信停止信号的定义是SCL为高电平期间，SDA由低电平向高电平变化产生一个上升沿，表示结束信号，如图中的stop部分所示。
+
+
+# How to debug dump?
+
+## Example
+
+[Linux内核栈信息获取与理解](http://blog.csdn.net/ricks_wu/article/details/19897237)
+
+
+
+
+
+# Reference
+
+
+[Linux I2C设备驱动编写（一）](http://blog.csdn.net/airk000/article/details/21345457)
+
+[I2C设备驱动的编写(一)](http://blog.chinaunix.net/uid-27041925-id-3630913.html)
+
+[I2C设备驱动的编写(二)](http://blog.chinaunix.net/uid-27041925-id-3630925.html)
+
+[Linux的i2c驱动详解](http://blog.chinaunix.net/uid-27041925-id-3631304.html)
+
+[I2C驱动之总线接口i2c_transfer](http://blog.csdn.net/u013427264/article/details/42777091)
+
+[U-Boot下的I2C设备的读写](http://blog.sina.com.cn/s/blog_6836cbf70100qe4i.html)
+
+[I2C总线与EEPROM](http://www.51hei.com/bbs/dpj-22299-1.html)
+
+commit c517d838eb7d07bbe9507871fab3931deccff539
+
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+
+Date:   Sun Feb 22 18:21:14 2015 -0800
+
+    Linux 4.0-rc1
+

@@ -1,0 +1,106 @@
+	peter@peter-ThinkPad-T430:~/work/src/qemu-2.0.2$ ./configure --target-list=arm-softmmu --audio-drv-list=
+	Disabling libtool due to broken toolchain support
+	Install prefix    /usr/local
+	BIOS directory    /usr/local/share/qemu
+	binary directory  /usr/local/bin
+	library directory /usr/local/lib
+	module directory  /usr/local/lib/qemu
+	libexec directory /usr/local/libexec
+	include directory /usr/local/include
+	config directory  /usr/local/etc
+	local state directory   /usr/local/var
+	Manual directory  /usr/local/share/man
+	ELF interp prefix /usr/gnemul/qemu-%M
+	Source path       /home/peter/work/src/qemu-2.0.2
+	C compiler        cc
+	Host C compiler   cc
+	C++ compiler      c++
+	Objective-C compiler cc
+	ARFLAGS           rv
+	CFLAGS            -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -pthread -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include   -g 
+	QEMU_CFLAGS       -fPIE -DPIE -m64 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -Wstrict-prototypes -Wredundant-decls -Wall -Wundef -Wwrite-strings -Wmissing-prototypes -fno-strict-aliasing -fno-common  -Wendif-labels -Wmissing-include-dirs -Wempty-body -Wnested-externs -Wformat-security -Wformat-y2k -Winit-self -Wignored-qualifiers -Wold-style-declaration -Wold-style-definition -Wtype-limits -fstack-protector-all -I/usr/include/libpng12   -I$(SRC_PATH)/pixman/pixman -I$(BUILD_DIR)/pixman/pixman -I$(SRC_PATH)/dtc/libfdt
+	LDFLAGS           -Wl,--warn-common -Wl,-z,relro -Wl,-z,now -pie -m64 -g 
+	make              make
+	install           install
+	python            python -B
+	smbd              /usr/sbin/smbd
+	module support    no
+	host CPU          x86_64
+	host big endian   no
+	target list       arm-softmmu
+	tcg debug enabled no
+	gprof enabled     no
+	sparse enabled    no
+	strip binaries    yes
+	profiler          no
+	static build      no
+	-Werror enabled   no
+	pixman            internal
+	SDL support       yes
+	GTK support       no
+	VTE support       no
+	curses support    yes
+	curl support      no
+	mingw32 support   no
+	Audio drivers     
+	Block whitelist (rw) 
+	Block whitelist (ro) 
+	VirtFS support    no
+	VNC support       yes
+	VNC TLS support   no
+	VNC SASL support  no
+	VNC JPEG support  no
+	VNC PNG support   yes
+	VNC WS support    no
+	xen support       no
+	brlapi support    no
+	bluez  support    no
+	Documentation     yes
+	GUEST_BASE        yes
+	PIE               yes
+	vde support       no
+	netmap support    no
+	Linux AIO support no
+	ATTR/XATTR support yes
+	Install blobs     yes
+	KVM support       yes
+	RDMA support      no
+	TCG interpreter   no
+	fdt support       yes
+	preadv support    yes
+	fdatasync         yes
+	madvise           yes
+	posix_madvise     yes
+	sigev_thread_id   yes
+	uuid support      no
+	libcap-ng support no
+	vhost-net support yes
+	vhost-scsi support yes
+	Trace backend     nop
+	Trace output file trace-<pid>
+	spice support     no
+	rbd support       no
+	xfsctl support    no
+	nss used          no
+	libusb            no
+	usb net redir     no
+	GLX support       yes
+	libiscsi support  no
+	libnfs support    no
+	build guest agent yes
+	QGA VSS support   no
+	seccomp support   no
+	coroutine backend ucontext
+	coroutine pool    yes
+	GlusterFS support no
+	virtio-blk-data-plane no
+	gcov              gcov
+	gcov enabled      no
+	TPM support       no
+	libssh2 support   no
+	TPM passthrough   no
+	QOM debugging     yes
+	vhdx              no
+	Quorum            no
+	lzo support       no
+	snappy support    no

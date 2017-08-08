@@ -1,0 +1,286 @@
+---
+layout: post
+title:  "QEMU"
+date:   2017-01-18
+categories: jekyll update
+---
+
+
+# Setup ARM QEMU enviroment step by step 
+
+## clone kernel code
+
+	git clone https://github.com/torvalds/linux.git
+
+## Install toolchain 
+
+	sudo apt-get install gcc-arm-linux-gnueabi
+
+
+
+
+## Compile kernel
+
+### Generate .config file specific to vexpress board,
+
+	make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm vexpress_defconfig
+
+Generated `.config` as below,
+
+	#
+	# Automatically generated file; DO NOT EDIT.
+	# Linux/arm 3.16.0 Kernel Configuration
+	#
+
+### Compile kernel in order to create zImage
+
+	make CROSS_COMPILE=arm-linux-gnueabi- ARCH=arm
+
+~/work/src/linux/linux/arch/arm/boot$ ll
+
+	-rwxrwxr-x  1 peter peter 3325088  3月 19 16:36 zImage*
+	-rw-rw-r--  1 peter peter     134  3月 19 16:36 .zImage.cmd
+
+
+
+
+## Download and intall QEMU
+
+
+### Download QEMU
+
+	wget http://wiki.qemu-project.org/download/qemu-2.0.2.tar.bz2
+	tar -jxvf qemu-2.0.2.tar.bz2
+
+### Install prerequisites
+
+	sudo apt-get install zlib1g-dev
+	sudo apt-get install libglib2.0-0
+	sudo apt-get install libglib2.0-dev
+
+
+### Configure qemu to support all boards under arm
+
+	./configure --target-list=arm-softmmu --audio-drv-list=
+
+[execution result](/execution_result/qemu/configure-qemu-to-support-all-boards-under-arm.txt)
+
+### Compile 
+
+	make
+
+[Output](/execution_result/qemu/compile-qemu.txt)
+
+
+
+### Install QEMU
+
+	make install
+
+[Output](/execution_result/qemu/install-qemu.txt)
+
+
+
+### Launch QEMU
+
+	qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/peter/work/src/linux/linux/arch/arm/boot/zImage -nographic -append "console=ttyAMA0"
+
+Kernel launched, but error [Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)](/execution_result/qemu/qemu-system-arm--output.txt) occurred which means lack of rootfs.
+
+	VFS: Cannot open root device "(null)" or unknown-block(0,0): error -6
+	Please append a correct "root=" boot option; here are the available partitions:
+	1f00          131072 mtdblock0  (driver?)
+	Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+
+
+## rootfs
+
+根文件系统 = busybox(包含基础的Linux命令)  + 运行库 + 几个字符设备
+
+本文直接使用SD卡做为存储空间，文件格式为ext3格式
+
+
+Download busybox,
+
+	wget http://www.busybox.net/downloads/busybox-1.20.2.tar.bz2
+
+		Or download from `http://linux.linuxidc.com/index.php?folder=cHViL0J1c3lib3g=` in China :).
+
+### create rootfs
+
+Generate `_install` as below,
+
+	sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- defconfig
+	sudo make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- install
+
+安装完成后，会在busybox目录下生成_install目录，该目录下的程序就是单板运行所需要的命令。
+
+[Building a Root File System using BusyBox](https://emreboy.wordpress.com/2012/12/20/building-a-root-file-system-using-busybox/#more-88). For cpio, refer to [cpio -o ](http://www.gnu.org/software/cpio/manual/cpio.html).
+
+
+Create image as below, 
+
+
+	sudo mkdir rootfs
+	sudo cp _install/* -r rootfs/
+	sudo mkdir rootfs/lib
+	sudo cp -P /usr/arm-linux-gnueabi/lib/* rootfs/lib/
+
+	sudo mknod rootfs/dev/tty1 c 4 1
+	sudo mknod rootfs/dev/tty2 c 4 2
+	sudo mknod rootfs/dev/tty3 c 4 3
+	sudo mknod rootfs/dev/tty4 c 4 4
+
+
+	dd if=/dev/zero of=a9rootfs.ext3 bs=1M count=32
+	mkfs.ext3 a9rootfs.ext3
+
+	sudo mkdir tmpfs
+	sudo mount -t ext3 a9rootfs.ext3 tmpfs/ -o loop
+	sudo cp -r rootfs/*  tmpfs/
+	sudo umount tmpfs
+
+Launch QEMU, 
+
+	qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/peter/work/src/linux/linux/arch/arm/boot/zImage -nographic -append "root=/dev/mmcblk0 console=ttyAMA0" -sd a9rootfs.ext3 
+
+
+[execution log for creating rootfs](/execution_result/qemu/busybox-create-rootfs.txt)
+
+
+
+
+## QEMU in -nographic mode
+
+To see the help use <Ctrl-a h> or <Ctrl-a ?> :
+
+	(qemu) 
+	C-a h    print this help
+	C-a x    exit emulator
+	C-a s    save disk data back to file (if -snapshot)
+	C-a t    toggle console timestamps
+	C-a b    send break (magic sysrq)
+	C-a c    switch between console and monitor
+	C-a C-a  sends C-a
+
+
+这里简单介绍下qemu命令的参数：
+
+	-M vexpress-a9 模拟vexpress-a9单板，你可以使用-M ?参数来获取该qemu版本支持的所有单板
+
+	-m 512M 单板运行物理内存512M
+
+	-kernel /home/ivan/kernel_git/linux/arch/arm/boot/zImage  告诉qemu单板运行内核镜像路径
+
+	-nographic 不使用图形化界面，只使用串口
+
+	-append "console=ttyAMA0" 内核启动参数，这里告诉内核vexpress单板运行，串口设备是哪个tty。
+
+Run `qemu-system-arm -h` for more info.
+
+
+
+## How to use gdb to debug ARM kernel in Qemu
+
+In terminal 1:
+
+	# gdb-multiarch -x .gdbinit vmlinux
+
+In terminal 2:
+
+	qemu-2.0.2# qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/baohua/develop/linux/arch/arm/boot/zImage   -nographic -append "console=ttyAMA0" -s -S
+
+	-S              freeze CPU at startup (use 'c' to start execution)
+	-s              shorthand for -gdb tcp::1234
+
+
+[execution_result](/execution_result/qemu/gdb-qemu-kernel.txt)
+
+
+[How to use gdb to debug ARM kernel in Qemu](http://zhiyisun.github.io/2015/04/22/how-to-use-gdb-to-debug-ARM-kernel-in-Qemu.html)
+
+[利用qemu进行内核源码级调试](http://blog.csdn.net/gdt_a20/article/details/7231652)
+
+
+
+## Problems
+
+### error: storage size of ‘rlimit_fsize’ isn’t known
+
+An error occurred while executing `make CROSS_COMPILE=arm-linux-gnueabi-` [error: storage size of ‘rlimit_fsize’ isn’t known](/execution_result/qemu/busybox-make-output-error.txt). Fix it with updating `include/platform.h` and add `#include <sys/resource.h>`
+
+Refer to [error: storage size of ‘rlimit_fsize’ isn’t known](http://blog.csdn.net/remme123/article/details/9136783)
+
+### error: possibly undefined macro: AC_PROG_LIBTOOL
+
+While compiling QEMU if below problem occurred,
+
+	configure.ac:75: error: possibly undefined macro: AC_PROG_LIBTOOL
+	If this token and others are legitimate, please use m4_pattern_allow.
+	See the Autoconf documentation.
+
+fix it with below, 
+
+	sudo apt-get install libtool  
+
+[error: possibly undefined macro: AC_PROG_LIBTOOL](http://blog.csdn.net/yusiguyuan/article/details/31747859)
+
+
+### install: cannot change permissions of ‘/usr/local/share/doc/qemu’: No such file or directory
+
+If below problem occurred while installing QEMU, 
+
+	peter@peter-ThinkPad-T430:~/work/src/qemu-2.0.2$ make install
+	make  all-recursive
+	Making all in pixman
+	make  all-am
+	make[4]: Nothing to be done for `all-am'.
+	Making all in test
+	make[3]: Nothing to be done for `all'.
+		 LEX convert-dtsv0-lexer.lex.c
+	make[1]: flex: Command not found
+		 BISON dtc-parser.tab.c
+	make[1]: bison: Command not found
+		 LEX dtc-lexer.lex.c
+	make[1]: flex: Command not found
+		CHK version_gen.h
+	install -d -m 0755 "/usr/local/share/doc/qemu"
+	install: cannot change permissions of ‘/usr/local/share/doc/qemu’: No such file or directory
+	make: *** [install-doc] Error 1
+
+fix it with 
+
+	sudo make install
+
+[LEX convert-dtsv0-lexer.lex.c](http://blog.csdn.net/cfbingo/article/details/50145233)
+
+
+### can't run '/etc/init.d/rcS': No such file or directory
+
+EXT3-fs (mmcblk0): mounted filesystem with writeback data mode
+VFS: Mounted root (ext3 filesystem) readonly on device 179:0.
+Freeing unused kernel memory: 244K (805c0000 - 805fd000)
+random: nonblocking pool is initialized
+can't run '/etc/init.d/rcS': No such file or directory
+
+Please press Enter to activate this console.  
+
+???????????????????????????????????????????????????????????????????????????
+
+
+
+
+# Reference
+
+[从零使用qemu模拟器搭建arm运行环境](http://blog.csdn.net/linyt/article/details/42504975)
+
+[QEMU实验平台](http://book.2cto.com/201508/55133.html)
+
+[Booting Linux with U-Boot on QEMU ARM](https://balau82.wordpress.com/2010/04/12/booting-linux-with-u-boot-on-qemu-arm/#trackback-2970)
+
+[Ubuntu 16.04 利用qemu模拟ARM开发板](http://blog.csdn.net/nxcxl88/article/details/53244754)
+
+[ARM Versatile Express Emulation On Qemu From Scratch](https://learningfromyoublog.wordpress.com/2016/04/05/131/)
+
+
+

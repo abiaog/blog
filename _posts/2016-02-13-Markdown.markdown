@@ -1,0 +1,46 @@
+---
+layout: post
+title:  "Markdown"
+date:   2016-02-13 
+categories: jekyll update
+---
+
+# Tools
+[vim-instant-markdown](https://github.com/suan/vim-instant-markdown)
+
+http://nemex.io/?utm_source=next.36kr.com
+
+http://blog.csdn.net/qhuwn/article/details/51016751
+
+https://bramp.github.io/js-sequence-diagrams/
+
+http://www.jianshu.com/p/6c6d209aa0e3
+
+https://github.com/ghiculescu/jekyll-table-of-contents
+
+# Syntax
+[Syntax](http://daringfireball.net/projects/markdown/syntax)
+
+*   Red
+*   Green
+*   Blue
+
+[code](/code_for_post/Panda.cpp)   
+<a href="/code_for_post/Panda.cpp">code in html format</a>
+
+[simple syntax](http://jingyan.baidu.com/article/9f7e7ec0510fcc6f29155460.html)
+
+![svg](_includes/icon-github.svg)
+
+* Table
+
+':' used for alignment
+|	项目	      |    价格   |
+|--------------------:|:---------:|
+|	Computer      |    $1600  |
+|	Phone	      |    $12    |
+|	Pipe	      |    $1     |
+|	Apple	      |    $1     |
+
+
+

@@ -1,0 +1,406 @@
+---
+layout: post
+title:  "gdb"
+date:   2016-05-05 
+categories: jekyll update
+---
+
+# Richard Stallman 
+
+Richard Stallman was the original author of gdb, and of many other gnu programs.
+Stallman launched the GNU Project, founded the Free Software Foundation, developed the GNU Compiler Collection and GNU Emacs, and wrote the GNU General Public License.
+
+# GNU Debugger
+
+The GNU Debugger, usually called just GDB and named gdb as an executable file, is the standard debugger for the GNU operating system. However, its use is not strictly limited to the GNU operating system; it is a portable debugger that runs on many Unix-like systems and works for many programming languages, including Ada, C, C++, Objective-C, Free Pascal, Fortran, Java and partially others.
+
+	gdb
+	pdb
+
+# Help
+	(gdb) h
+	List of classes of commands:
+
+	aliases -- Aliases of other commands
+	breakpoints -- Making program stop at certain points
+	data -- Examining data
+	files -- Specifying and examining files
+	internals -- Maintenance commands
+	obscure -- Obscure features
+	running -- Running the program
+	stack -- Examining the stack
+	status -- Status inquiries
+	support -- Support facilities
+	tracepoints -- Tracing of program execution without stopping the program
+	user-defined -- User-defined commands
+
+	Type "help" followed by a class name for a list of commands in that class.
+	Type "help all" for the list of all commands.
+	Type "help" followed by command name for full documentation.
+	Type "apropos word" to search for commands related to "word".
+	Command name abbreviations are allowed if unambiguous.
+
+Frequently used commands,
+
+	b
+	p
+	bt 
+	l
+	r
+	c
+	n
+	s
+	watch <var>
+	save breakpoints -- Save current breakpoint definitions as a script
+	source [-s] [-v] FILE
+
+# breakpoints
+
+delete breakpoints -- Delete some breakpoints or auto-display expressions
+
+disable -- Disable some breakpoints
+
+disable breakpoints -- Disable some breakpoints
+
+enable -- Enable some breakpoints
+
+enable breakpoints -- Enable some breakpoints
+
+
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	1       breakpoint     keep y   0x0000000000400585 in main at power.c:7
+		breakpoint already hit 1 time
+	2       breakpoint     keep y   0x0000000000400598 in main at power.c:10
+		breakpoint already hit 9 times
+	3       breakpoint     keep y   0x0000000000400585 in main at power.c:7
+	(gdb) disable b
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	1       breakpoint     keep n   0x0000000000400585 in main at power.c:7
+		breakpoint already hit 1 time
+	2       breakpoint     keep n   0x0000000000400598 in main at power.c:10
+		breakpoint already hit 9 times
+	3       breakpoint     keep n   0x0000000000400585 in main at power.c:7
+	(gdb) enable b
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	1       breakpoint     keep y   0x0000000000400585 in main at power.c:7
+		breakpoint already hit 1 time
+	2       breakpoint     keep y   0x0000000000400598 in main at power.c:10
+		breakpoint already hit 9 times
+	3       breakpoint     keep y   0x0000000000400585 in main at power.c:7
+
+Delete breakpoints,
+
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	1       breakpoint     keep y   0x0000000000400585 in main at power.c:8
+		breakpoint already hit 1 time
+	2       breakpoint     keep y   0x000000000040058f in main at power.c:9
+	(gdb) d
+	Delete all breakpoints? (y or n) n
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	1       breakpoint     keep y   0x0000000000400585 in main at power.c:8
+		breakpoint already hit 1 time
+	2       breakpoint     keep y   0x000000000040058f in main at power.c:9
+	(gdb) d 1
+	(gdb) info b
+	Num     Type           Disp Enb Address            What
+	2       breakpoint     keep y   0x000000000040058f in main at power.c:9
+
+# Conditional breakpoints
+
+[main.cc](https://www.cs.cmu.edu/~gilpin/tutorial/main.cc)
+
+(gdb) h condition
+Specify breakpoint number N to break only if COND is true.
+Usage is `condition N COND', where N is an integer and COND is an
+expression to be evaluated whenever breakpoint N is reached.
+
+
+# list 
+
+	(gdb) bt
+	#0  main () at power.c:9
+	(gdb) l 9
+	4	
+	5	int main() {
+	6	
+	7		int i;
+	8		printf("Program to calculate power\n");
+	9		for (i=0;i<10;i++)
+	10			printf("%d %d\n",i, power(2,i));
+	11		return 0;
+	12	}
+	13	
+
+# print
+
+
+# backtrace
+
+	(gdb) h bt
+	Print backtrace of all stack frames, or innermost COUNT frames.
+	With a negative argument, print outermost -COUNT frames.
+	Use of the 'full' qualifier also prints the values of the local variables.
+
+# watch
+
+# info
+
+	info b
+
+	(gdb) info threads
+	  Id   Target Id         Frame 
+	* 1    process 9821 "power" main () at power.c:9
+
+# info vtble EXP ???
+
+	(gdb) h info vtbl
+	Show the virtual function table for a C++ object.
+	Usage: info vtbl EXPRESSION
+	Evaluate EXPRESSION and display the virtual function table for the
+	resulting object.
+
+# file 
+
+	(gdb) h file
+	Use FILE as program to be debugged.
+	It is read for its symbols, for getting the contents of pure memory,
+	and it is the program executed when you use the `run' command.
+	If FILE cannot be found as specified, your execution directory path
+	($PATH) is searched for a command of that name.
+	No arg means to have no executable file and no symbols.
+
+# inferiors
+
+# pwd
+
+	(gdb) h pwd
+	Print working directory.  This is used for your program as well.
+
+# An Example Debugging Session 
+
+[main.cc](/code_for_post/gdb/main.cc)   
+
+	g++ main.cpp -g -Wall -o main
+	gdb main
+
+# .gdbinit
+
+[.gdbinit](/code_for_post/gdb/.gdbinit)   
+
+	gdb -x .gdbinit main
+
+# gdbserver
+
+[power.c](/code_for_post/gdb/power.c)   
+
+# gdbserver --multi
+
+To start "gdbserver" without supplying an initial command to run or process ID to attach, use this command line option.  Then
+you can connect using "target extended-remote" and start the program you want to debug.  
+
+On target,
+
+	gdbserver --multi localhost:2000
+	Listening on port 2000
+
+On host,
+
+	(gdb) target extended-remote 192.168.1.105:2000
+	Remote debugging using 192.168.1.105:2000
+	(gdb) set remote exec-file power
+	(gdb) file power
+	Reading symbols from power...done.
+	(gdb) b main
+	Breakpoint 1 at 0x400585: file power.c, line 8.
+	(gdb) r
+	Starting program: /home/peter/work/src/abc.github.io/code_for_post/gdb/power 
+
+	Breakpoint 1, main () at power.c:8
+	8		printf("Program to calculate power\n");
+
+
+
+# Core Dump Example
+
+[gdb_core_dump.c](/code_for_post/gdb/gdb_core_dump.c)   
+
+	gcc -g code_for_post/gdb/gdb_core_dump.c 
+	ulimit -c unlimited
+	./a.out 
+	gdb ./a.out core 
+
+Output,
+
+	root@baohua-VirtualBox:~/w/src/abc.github.io# gcc -g code_for_post/gdb/gdb_core_dump.c 
+	code_for_post/gdb/gdb_core_dump.c: In function ‘do_it’:
+	code_for_post/gdb/gdb_core_dump.c:28:12: warning: initialization makes pointer from integer without a cast [enabled by default]
+	  char* p = 1; //定义一个字符指针变量a，指向地址1，这个地址肯定不是自己可以访问的，但是这行不会产生段错误
+		    ^
+	root@baohua-VirtualBox:~/w/src/abc.github.io# ./a.out 
+	Segmentation fault (core dumped)
+	root@baohua-VirtualBox:~/w/src/abc.github.io# ll
+	total 308
+	drwxrwx--- 1 root vboxsf   4096  5月  5 16:02 ./
+	drwxrwx--- 1 root vboxsf   4096  5月  5 15:59 ../
+	-rwxrwx--- 1 root vboxsf   8254  5月  5 16:02 a.out*
+	-rwxrwx--- 1 root vboxsf 221184  5月  5 16:02 core*
+	root@baohua-VirtualBox:~/w/src/abc.github.io# gdb ./a.out core 
+	GNU gdb (Ubuntu 7.7-0ubuntu3.1) 7.7
+	Copyright (C) 2014 Free Software Foundation, Inc.
+	License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+	This is free software: you are free to change and redistribute it.
+	There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+	and "show warranty" for details.
+	This GDB was configured as "i686-linux-gnu".
+	Type "show configuration" for configuration details.
+	For bug reporting instructions, please see:
+	<http://www.gnu.org/software/gdb/bugs/>.
+	Find the GDB manual and other documentation resources online at:
+	<http://www.gnu.org/software/gdb/documentation/>.
+	For help, type "help".
+	Type "apropos word" to search for commands related to "word"...
+	Reading symbols from ./a.out...done.
+	[New LWP 4189]
+	Core was generated by `./a.out'.
+	Program terminated with signal SIGSEGV, Segmentation fault.
+	#0  0x0804840f in do_it () at code_for_post/gdb/gdb_core_dump.c:29
+	29		*p = 'a'; //真正产生段错误的在这里，试图更改地址1的值，此时内核会终止该进程，并且把core文件dump出来
+	(gdb) where
+	#0  0x0804840f in do_it () at code_for_post/gdb/gdb_core_dump.c:29
+	#1  0x080483f8 in main () at code_for_post/gdb/gdb_core_dump.c:23
+	(gdb) bt
+	#0  0x0804840f in do_it () at code_for_post/gdb/gdb_core_dump.c:29
+	#1  0x080483f8 in main () at code_for_post/gdb/gdb_core_dump.c:23
+	(gdb) 
+
+
+# gdb -tui 
+
+# ddd
+GNU DDD is a graphical front-end for command-line debuggers such as GDB, DBX, WDB, Ladebug, JDB, XDB, the Perl debugger, the bash debugger bashdb, the GNU Make debugger remake, or the Python debugger pydb. Besides ``usual'' front-end features such as viewing source texts, DDD has become famous through its interactive graphical data display, where data structures are displayed as graphs.
+
+[Debugging with DDD](http://www.gnu.org/software/ddd/manual/html_mono/ddd.html)
+
+# Debugging Programs with Multiple Threads
+
+[Debugging Programs with Multiple Threads](https://sourceware.org/gdb/onlinedocs/gdb/Threads.html)
+
+[gdb 多线程调试](http://www.cnblogs.com/xuxm2007/archive/2011/04/01/2002162.html)
+
+# Debugging with GDB in Emacs
+
+# Debugging with GDB in VIM
+
+
+
+
+# Debug Memory Layout And The Stack
+
+
+* Memory Layout
+
+That's how VM works. For the most part, each process's VM space is laid out in a similar and predictable manner:
+
+              +-------------------------------------------------------------------------------------------------------------------------+
+              | High Address        |            Args and env vars            | Command line arguments and environment variables        |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              |                     |                  Stack                  |                                                         |
+              |                     |                    |                    |                                                         |
+              |                     |                    V                    |                                                         |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              |                     |              Unused memory              |                                                         |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              |                     |                    ^                    |                                                         |
+              |                     |                    |                    |                                                         |
+              |                     |                  Heap                   |                                                         |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              |                     |    Uninitialized Data Segment (bss)     | Initialized to zero by exec.                            |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              |                     |        Initialized Data Segment         | Read from the program file by exec.                     |
+              |---------------------+-----------------------------------------+---------------------------------------------------------|
+              | Low Address         |              Text Segment               | Read from the program file by exec.                     |
+              +-------------------------------------------------------------------------------------------------------------------------+
+
+     * Text Segment: The text segment contains the actual code to be executed. It's usually sharable, so multiple instances of a program can share the text segment to lower memory requirements. This segment is usually marked read-only so a program can't modify its own instructions.
+     * Initialized Data Segment: This segment contains global variables which are initialized by the programmer.
+     * Uninitialized Data Segment: Also named "bss" (block started by symbol) which was an operator used by an old assembler. This segment contains uninitialized global variables. All variables in this segment are initialized to 0 or NULL pointers before the program begins to execute.
+     * The stack: The stack is a collection of stack frames which will be described in the next section. When a new frame needs to be added (as a result of a newly called function), the stack grows downward.
+     * The heap: Most dynamic memory, whether requested via C's malloc() and friends or C++'s new is doled out to the program from the heap. The C library also gets dynamic memory for its own personal workspace from the heap as well. As more memory is requested "on the fly", the heap grows upward.
+
+
+
+[gdb-memory-layout.c](/code_for_post/gdb/gdb-memory-layout.c)
+
+Execute, 
+
+	root@baohua-VirtualBox:~/w/src/abiaog.github.io/code_for_post/gdb# gcc -W -Wall -c gdb-memory-layout.c 
+	root@baohua-VirtualBox:~/w/src/abiaog.github.io/code_for_post/gdb# gcc -o gdb-memory-layout gdb-memory-layout.o
+	root@baohua-VirtualBox:~/w/src/abiaog.github.io/code_for_post/gdb# size gdb-memory-layout gdb-memory-layout.o
+	   text	   data	    bss	    dec	    hex	filename
+	   1108	    280	      4	   1392	    570	gdb-memory-layout
+	     96	      0	      0	     96	     60	gdb-memory-layout.o
+
+
+The data segment is the initialized and uninitialized segments combined. The dec and hex sections are the file size in decimal and hexadecimal format respectively.
+
+You can also get the size of the sections of the object file using "objdump -h" or "objdump -x".
+
+
+	root@baohua-VirtualBox:~/w/src/abiaog.github.io/code_for_post/gdb# objdump -h gdb-memory-layout.o
+
+	gdb-memory-layout.o:     file format elf32-i386
+
+	Sections:
+	Idx Name          Size      VMA       LMA       File off  Algn
+	  0 .text         0000001c  00000000  00000000  00000034  2**0
+			  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+	  1 .data         00000000  00000000  00000000  00000050  2**0
+			  CONTENTS, ALLOC, LOAD, DATA
+	  2 .bss          00000000  00000000  00000000  00000050  2**0
+			  ALLOC
+	  3 .rodata       0000000c  00000000  00000000  00000050  2**0
+			  CONTENTS, ALLOC, LOAD, READONLY, DATA
+	  4 .comment      00000025  00000000  00000000  0000005c  2**0
+			  CONTENTS, READONLY
+	  5 .note.GNU-stack 00000000  00000000  00000000  00000081  2**0
+			  CONTENTS, READONLY
+	  6 .eh_frame     00000038  00000000  00000000  00000084  2**2
+			  CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
+
+
+
+
+
+## Preparerring An Executable For Debugging
+
+	gcc -g -o filename filename.c
+
+You can also give a numerical argument to -g, -ggdb and all the other debugging format options, with 1 being the least amount of information and 3 being the most. Without a numerical argument, the debug level defaults to 2. By using -g3 you can even access preprocessor macros, which is really nice. I suggest you always use -ggdb3 to produce an enhanced symbol table.
+
+
+[Using GNU's GDB Debugger Memory Layout And The Stack](http://www.dirac.org/linux/gdb/02a-Memory_Layout_And_The_Stack.php)
+
+
+# Reference
+
+
+[使用gdb和core dump迅速定位段错误](http://my.oschina.net/michaelyuanyuan/blog/68618)
+
+[gdb的gui用法](http://www.cnblogs.com/xuxm2007/archive/2011/08/13/2137055.html)
+
+[A GDB Tutorial with Examples](http://www.cprogramming.com/gdb.html)
+
+[How to Debug Programs on Remote Server using GDBServer Example](http://www.thegeekstuff.com/2014/04/gdbserver-example/)
+
+[Debugging with gdb](https://sourceware.org/gdb/current/onlinedocs/gdb/)
+
+[Debugging Under Unix: gdb Tutorial](https://www.cs.cmu.edu/~gilpin/tutorial/)
+
+
+
+

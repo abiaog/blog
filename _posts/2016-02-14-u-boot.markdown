@@ -1,0 +1,242 @@
+---
+layout: post
+title:  "u-boot"
+date:   2016-02-14
+categories: jekyll update
+---
+
+
+# U-boot: ARM Versatile Express Emulation On Qemu With NFS as Rootfs
+
+
+## Download U-boot source code:
+
+	git clone git://git.denx.de/u-boot.git
+
+## ARM Cross_Compiler Tool chain installation:
+
+A quick introduction about Cross_Compiler :
+
+The difference between a Native compiler (gcc) and a cross-compiler(e.g arm-none-linux gnueabi-gcc) is that the Native compiler runs on an architecture (for example x86_64) and produces binaries for the same architecture.  A cross-compiler produces binaries for a different architecture (in our case ARMv7). In detail will be explained in upcoming Tutorials. Download binary from below website:
+
+	wget http://sourcery.mentor.com/public/gnu_toolchain/arm-none-linux-gnueabi/arm-2014.05-29-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2
+	tar xvf arm-2014.05-29-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2
+
+Export binaries by adding at the end of `~/.bashrc` file ,this is one time activity.
+	
+	export PATH=/home/baohua/develop/ARM_Cross_Tools/arm-2014.05/bin:$PATH
+
+
+
+## Compile and run u-boot
+
+Load default config for target board i.e vexpress_ca9x4_defconfig using 1st command and Compile U-boot using 2nd command shown in below .
+
+	cd u-boot
+	make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- vexpress_ca9x4_defconfig
+	make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi-
+
+Run below command and Hit any key to stop autoboot.
+
+	/usr/bin/qemu-system-arm -M vexpress-a9 -m 512M -kernel u-boot -nographic
+
+[execute result](/execution_result/u-boot/qemu-system-arm.txt)
+
+
+## Compile and run kernel
+
+
+Download Linux kernel source code, taking version 3.16 stable code
+	cd linux 
+	git checkout 3.16
+
+Prepare for compilation:
+
+Load default config for target board i.e vexpress_defconfig. defconfig  is explained here.
+
+	cd linux
+	make ARCH=arm CROSS_COMPILE=/home/baohua/develop/ARM_Cross_Tools/arm-2014.05/bin/arm-none-linux-gnueabi- vexpress_defconfig
+
+Run below command to configure some settings :
+
+	make ARCH=arm CROSS_COMPILE=/home/baohua/develop/ARM_Cross_Tools/arm-2014.05/bin/arm-none-linux-gnueabi- menuconfig
+
+
+Enable some settings as shown(*use space bar to enable).
+	
+Boot options  —>
+
+*   [*] Use appended device tree blob to zImage (EXPERIMENTAL)
+
+   CONFIG_ARM_APPENDED_DTB:
+   With this option, the boot code will look for a device tree binary (DTB) appended to zImage
+   (e.g. cat zImage .dtb > zImage_w_dtb).
+
+*  [*] Supplement the appended DTB with traditional ATAG information (NEW)
+   (console=ttyAMA0) Default kernel command string.
+
+   CONFIG_ARM_ATAG_DTB_COMPAT:
+
+   Some old bootloaders can’t be updated  to a DTB capable one,  yet they provide ATAGs with  memory configuration, the ramdisk address,the  kernel cmdline string, etc. Such information is dynamically provided  by the bootloader and can’t always be stored  in a static DTB. To allow a  device tree enabled kernel to be used with such  bootloaders, this option allows zImage to extract the  information from the ATAG list and store it  at run time into the appended DTB.
+
+
+Kernel hacking  —>
+
+*  [*] Kernel low-level debugging functions (read help!)
+
+   CONFIG_DEBUG_LL:
+   Say Y here to include definitions of printascii, printch, printhex in the kernel. This is helpful if you are debugging code that executes before the console is initialized
+
+
+*  Kernel low-level debugging port(Autodetect UART0 onVersatile Express Cortex-A core tiles) —>
+   (X) Use PL011 UART0 at 0x10009000 (V2P-CA9 core tile)
+
+   CONFIG_DEBUG_VEXPRESS_UART0_CA9:
+   This option selects UART0 at 0x10009000. Except for custom models,this applies only to the V2P-CA9 tile.
+
+
+*  [*] Early printk
+
+   CONFIG_EARLY_PRINTK:
+   Say Y here if you want to have an early console using the kernel low-level debugging functions. Add earlyprintk to your kernel parameters to enable this console.
+
+
+
+Compile the kernel using below command :
+
+	make ARCH=arm CROSS_COMPILE=/home/baohua/develop/ARM_Cross_Tools/arm-2014.05/bin/arm-none-linux-gnueabi- all
+
+[kernel compile result](/execution_result/u-boot/kernel-make-all.txt)
+
+
+# Trivial File Transfer Protocol (TFTP) Installation.
+
+Install and Test TFTP Server in Host Ubuntu machine:
+
+* TFTP, a lightweight file transfer protocol, uses other software to get running: xinetd.
+* The xinetd program performs a neat job: it waits for network connections on ports (as specified  in the/etc/services file) and, when  a connection occurs, remaps the standard in  and out to the read and write of the network connection.
+* This trick means that the program run by  xinetd has code that uses file semantics (like scanf()  and printf()) and reads and writes over  a network connection.
+* Not all distributions have xinetd installed by default, so you may need to install it using your distribution’s package-management system.
+
+
+## Install following packages.
+
+	sudo apt-get install xinetd tftpd tftp
+
+## Create /etc/xinetd.d/tftp and put this entry
+
+	 # default: off
+	 # description: The tftp server serves files using the trivial file transfer
+	 # protocol. The tftp protocol is often used to boot diskless
+	 # workstations, download configuration files to network-aware printers,
+	 # and to start the installation process for some operating systems.
+	 service tftp
+	 {
+	 socket_type = dgram
+	 protocol = udp
+	 wait = yes
+	 user = root
+	 server = /usr/sbin/in.tftpd
+	 server_args = -s /tftpboot
+	 disable = no
+	 per_source = 11s
+	 cps = 100 2
+	 }
+
+The lines of interest in this file are server_args, which indicates the directory where TFTP stores and looks for files. The kernel that is downloaded to the board needs to be placed in this directory.
+
+## Create a folder /srv/tftpboot this should match whatever you gave in server_args. mostly it will be tftpboot
+
+	sudo mkdir /srv/tftpboot
+	sudo chmod -R 777 /srv/tftpboot
+	sudo chown -R nobody /srv/tftpboot
+
+## Restart the xinetd service.
+
+	sudo /etc/init.d/xinetd restart
+
+Now tftp server will be up and starts running.
+
+## Create a file named test with some content in /srv/tftpboot path of the tftp server
+
+	touch /srv/tftpboot/test
+	sudo chmod -R 777 /srv/tftpboot/test
+
+Obtain the ip address of the tftp server using: ifconfig command. example we will consider the ip address as 192.168.1.2
+
+## Now in some other terminal and folder  follow the following steps.
+
+	peter@peter-ThinkPad-T430:~/work/src/abiaog.github.io/_posts$ tftp 192.168.1.106
+	tftp> get test
+	tftp> quit
+	peter@peter-ThinkPad-T430:~/work/src/abiaog.github.io/_posts$ ll test 
+	-rw-r--r-- 1 peter peter 0  4月 30 20:52 test
+
+
+You can try the same test on another computer on the network, to ensure that you can connect to the host from another machine (across the  wire, as a network-person would say). If TFTP works from localhost but not from another computer, chances are the firewall is still running. Stop this service, and try again.
+
+
+# Problems
+
+## when `get test` with tftp, error code 2 access violation
+
+check info in /var/log/syslog as below,
+
+Apr 30 20:44:22 peter-ThinkPad-T430 in.tftpd[8769]: connect from 192.168.1.106 (192.168.1.106)
+Apr 30 20:44:22 peter-ThinkPad-T430 tftpd[8770]: tftpd: trying to get file: test
+Apr 30 20:44:22 peter-ThinkPad-T430 tftpd[8770]: tftpd: serving file from /srv/tftp
+
+Refer to [tftp error code 2 access violation](https://askubuntu.com/questions/599558/tftp-error-code-2-access-violation-tftp-not-working)
+
+
+# Reference
+
+[u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs](https://learningfromyoublog.wordpress.com/2016/11/27/u-boot-arm-versatile-express-emulation-on-qemu-with-nfs-as-rootfs/)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# note
+	git clone git://git.denx.de/u-boot.git
+	cd u-boot/
+	git tag -l
+	git checkout -b 201009 v2010.09
+	git branch
+	
+ 
+Makefile,
+
+	MKCONFIG        := $(SRCTREE)/mkconfig
+
+	%_config::      unconfig
+	    @$(MKCONFIG) -A $(@:_config=)
+
+
+`make zynq_zed_config` expands to `mkconfig -A zynq_zed`
+
+# U-Boot
+[Source Code](http://www.denx.de/wiki/U-Boot/SourceCode)
+
+
+# Reference
+
+
+[U-Boot启动过程完全分析](http://www.cnblogs.com/heaad/archive/2010/07/17/1779829.html)
+
+

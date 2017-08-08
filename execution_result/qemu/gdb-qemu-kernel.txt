@@ -1,0 +1,38 @@
+# Terminal 1
+
+root@baohua-VirtualBox:/home/baohua/develop/linux# gdb-multiarch vmlinux
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from vmlinux...done.
+(gdb) set architecture arm
+The target architecture is assumed to be arm
+(gdb) target remote localhost:1234
+Remote debugging using localhost:1234
+0x60000000 in ?? ()
+(gdb) b start_kernel
+Breakpoint 1 at 0x805c0814: file init/main.c, line 502.
+(gdb) c
+Continuing.
+
+Breakpoint 1, start_kernel () at init/main.c:502
+502	{
+(gdb) 
+
+
+
+# Terminal 2
+
+root@baohua-VirtualBox:/media/sf_share/p/qemu-2.0.2# qemu-system-arm -M vexpress-a9 -m 512M -kernel /home/baohua/develop/linux/arch/arm/boot/zImage   -nographic -append "console=ttyAMA0" -s -S
+

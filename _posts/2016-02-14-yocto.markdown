@@ -1,0 +1,106 @@
+---
+layout: post
+title:  "yocto"
+date:   2016-02-14 
+categories: jekyll update
+---
+The following list shows the required packages needed to build an image that runs on QEMU in graphical mode (e.g. essential plus graphics support). For lists of required packages for other scenarios, see the "Required Packages for the Host Development System" section in the Yocto Project Reference Manual.
+
+	Ubuntu and Debian
+
+		 $ sudo apt-get install gawk wget git-core diffstat unzip texinfo gcc-multilib \
+		 build-essential chrpath socat libsdl1.2-dev xterm
+
+
+Here is an example from an Ubuntu build host that clones the poky repository and then checks out the latest Yocto Project Release (i.e. 2.0):
+
+	$ git clone git://git.yoctoproject.org/poky
+	$ git checkout jethro
+
+
+Initialize the Build Environment: Run the oe-init-build-env environment setup script to define the OpenEmbedded build environment on your build host.
+
+	$ source oe-init-build-env
+
+Examine Your Local Configuration File: When you set up the build environment, a local configuration file named local.conf becomes available in a conf subdirectory of the Build Directory. Before using BitBake to start the build, you can look at this file and be sure your general configurations are how you want them: 
+
+By default, the target machine for the build is qemux86, which produces an image that can be used in the QEMU emulator and is targeted at an Intel® 32-bit based architecture. Further on in this example, this default is easily changed through the `MACHINE` variable so that you can quickly build an image for a different machine. 
+                    
+
+	# This sets the default machine to be qemux86 if no other machine is selected:
+	MACHINE ??= "qemux86"
+
+
+Start the Build: Continue with the following command to build an OS image for the target, which is core-image-sato in this example: 
+
+	$ bitbake core-image-sato
+
+For example, 
+
+	peter@peter-ThinkPad-T430:~/work/src/poky/build$ bitbake core-image-sato
+	Loading cache: 100% |##########################################################################################################| ETA:  00:00:00
+	Loaded 1330 entries from dependency cache.
+	NOTE: Resolving any missing task queue dependencies
+
+	Build Configuration:
+	BB_VERSION        = "1.28.0"
+	BUILD_SYS         = "x86_64-linux"
+	NATIVELSBSTRING   = "Ubuntu-14.04"
+	TARGET_SYS        = "i586-poky-linux"
+	MACHINE           = "qemux86"
+	DISTRO            = "poky"
+	DISTRO_VERSION    = "2.0.1"
+	TUNE_FEATURES     = "m32 i586"
+	TARGET_FPU        = ""
+	meta              
+	meta-yocto        
+	meta-yocto-bsp    = "jethro:5b12268f6e17574999f91628a60e21711cf62ee4"
+
+	NOTE: Preparing RunQueue
+	NOTE: Executing SetScene Tasks
+	NOTE: Executing RunQueue Tasks
+	WARNING: Failed to fetch URL http://fontconfig.org/release/fontconfig-2.11.94.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://xorg.freedesktop.org/releases/individual/proto/renderproto-0.11.1.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://xorg.freedesktop.org/releases/individual/lib/libXrender-0.9.9.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://www.freedesktop.org/software/harfbuzz/release/harfbuzz-1.0.2.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://wayland.freedesktop.org/releases/wayland-1.8.1.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://dri.freedesktop.org/libdrm/libdrm-2.4.62.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL ftp://ftp.freedesktop.org/pub/mesa/10.6.3/mesa-10.6.3.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://www.mega-nerd.com/libsndfile/files/libsndfile-1.0.25.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://kernel.org/pub/linux/bluetooth/bluez-5.33.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://liboil.freedesktop.org/download/liboil-0.3.17.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://www.freedesktop.org/software/startup-notification/releases/startup-notification-0.12.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-1.4.5.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://kernel.org/pub/linux/network/ofono/ofono-1.16.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://kernel.org/pub/linux/bluetooth/sbc-1.3.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://archive.apache.org/dist/subversion/subversion-1.8.13.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL https://s3.amazonaws.com/json-c_releases/releases/json-c-0.12.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://www.cmake.org/files/v3.3/cmake-3.3.1.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://www.mega-nerd.com/SRC/libsamplerate-0.1.8.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://hostap.epitest.fi/releases/wpa_supplicant-2.4.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://curl.haxx.se/download/curl-7.44.0.tar.bz2, attempting MIRRORS if available
+	WARNING: Failed to fetch URL https://github.com/kergoth/tslib/releases/download/1.1/tslib-1.1.tar.xz;downloadfilename=tslib-1.1.tar.xz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://download.savannah.nongnu.org/releases/leafpad/leafpad-0.8.18.1.tar.gz, attempting MIRRORS if available
+	WARNING: Failed to fetch URL http://pokylinux.org/releases/sato/sato-icon-theme-0.4.1.tar.gz, attempting MIRRORS if available
+	NOTE: Tasks Summary: Attempted 5487 tasks of which 2007 didn't need to be rerun and all succeeded.
+
+	Summary: There were 23 WARNING messages shown.
+
+
+
+The following steps show how easy it is to set up to build an image for a new machine. These steps build an image for the MinnowBoard MAX, which is supported by the Yocto Project and the meta-intel intel-corei7-64 and intel-core2-32 Board Support Packages (BSPs). 
+
+
+	$ git clone git://git.yoctoproject.org/meta-intel
+
+
+
+
+# Reference
+[Manual](http://www.yoctoproject.org/docs/2.0/mega-manual/mega-manual.html)
+
+[使用 Yocto Project 构建自定义嵌入式 Linux 发行版](http://blog.csdn.net/arnoldlu/article/details/20363243)
+
+
+
+
