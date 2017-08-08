@@ -1,9 +1,3 @@
----
-layout: post
-title:  "How to Replace Ubuntu Kernel"
-date:   2016-08-06 
-categories: jekyll update
----
 
 
 # Replace Ubuntu Kernel

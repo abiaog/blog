@@ -1,9 +1,3 @@
----
-layout: post
-title:  "yocto"
-date:   2016-02-14 
-categories: jekyll update
----
 The following list shows the required packages needed to build an image that runs on QEMU in graphical mode (e.g. essential plus graphics support). For lists of required packages for other scenarios, see the "Required Packages for the Host Development System" section in the Yocto Project Reference Manual.
 
 	Ubuntu and Debian

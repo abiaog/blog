@@ -1,9 +1,3 @@
----
-layout: post
-title:  "Configure mutt and msmtp"
-date:   2016-09-03 
-categories: jekyll update
----
 
 # 126.com
 

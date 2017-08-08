@@ -1,9 +1,3 @@
----
-layout: post
-title:  "google test"
-date:   2016-02-17 
-categories: jekyll update
----
 
 # TEST & TEST_F 
 

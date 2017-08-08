@@ -1,9 +1,3 @@
----
-layout: post
-title:  "Linux Device Driver --- Hello World"
-date:   2016-08-26 
-categories: jekyll update
----
 
 # Hello World 
 

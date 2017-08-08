@@ -1,9 +1,3 @@
----
-layout: post
-title:  "bash"
-date:   2016-07-27
-categories: jekyll update
----
 
 
 # if [] [[]] () (())

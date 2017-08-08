@@ -1,9 +1,3 @@
----
-layout: post
-title:  "Understanding the Linux Virtual Memory Manager"
-date:   2017-08-04 
-categories: jekyll update
----
 
 
 # Describing Physical Memory

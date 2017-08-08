@@ -1,9 +1,3 @@
----
-layout: post
-title:  "Markdown"
-date:   2016-02-13 
-categories: jekyll update
----
 
 # Tools
 [vim-instant-markdown](https://github.com/suan/vim-instant-markdown)

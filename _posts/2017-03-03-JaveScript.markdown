@@ -1,9 +1,3 @@
----
-layout: post
-title:  "JavaScript"
-date:   2017-03-03 
-categories: jekyll update
----
 
 
 # Node.js

@@ -1,10 +1,3 @@
----
-layout: post
-title:  "Understanding the Linux Kernel"
-date:   2017-02-14 
-categories: jekyll update
----
-
 
 # Chapter 1. Memory Addressing
 

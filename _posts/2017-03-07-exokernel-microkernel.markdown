@@ -1,9 +1,3 @@
----
-layout: post
-title:  "What are exokernel, microkernel and monolithic kernel?"
-date:   2017-03-07 
-categories: jekyll update
----
 
 
 # exokernel

@@ -1,9 +1,3 @@
----
-layout: post
-title:  "C++ Multiple Inheritance"
-date:   2016-02-13 
-categories: jekyll update
----
 # Construct Order In Multiple Inheritance
 The order in which base classes are constructed depends on the order in which they
 appear in the class derivation list. The order in which they appear in the constructor

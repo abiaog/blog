@@ -1,9 +1,3 @@
----
-layout: post
-title:  "FreeRTOS"
-date:   2017-05-03 
-categories: jekyll update
----
 
 # Definition: FreeRTOS Port
 

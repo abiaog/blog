@@ -1,9 +1,3 @@
----
-layout: post
-title:  "spinlock, seqlock, RCU, PER CPU Variables"
-date:   2016-10-20 
-categories: jekyll update
----
 
 # spinlock 
 

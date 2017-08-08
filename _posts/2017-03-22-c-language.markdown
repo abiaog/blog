@@ -1,9 +1,3 @@
----
-layout: post
-title:  "c language"
-date:   2017-03-22 
-categories: jekyll update
----
 
 
 # packed

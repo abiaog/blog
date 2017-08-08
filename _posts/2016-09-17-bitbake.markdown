@@ -1,9 +1,3 @@
----
-layout: post
-title:  "bitbake"
-date:   2016-09-17 
-categories: jekyll update
----
 
 # Obtaining BitBake
 

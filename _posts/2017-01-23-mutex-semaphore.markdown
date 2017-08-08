@@ -1,10 +1,3 @@
----
-layout: post
-title:  "mutex semaphore"
-date:   2017-01-23 
-categories: jekyll update
----
-
 
 
 

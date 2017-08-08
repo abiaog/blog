@@ -1,9 +1,3 @@
----
-layout: post
-title:  "The Plain Text Tools Introduction"
-date:   2016-02-12 
-categories: jekyll update
----
 # Text Editor
 [VIM](http://www.vim.org)   
 emacs   
