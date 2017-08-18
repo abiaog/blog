@@ -1,3 +1,19 @@
+# yocto
+
+## yocto project build system overview
+
+poky = bitbake + metadata
+
+- poky: build system used by yocto project
+- bitbake: a task executor and scheduler
+- metadata: task definitions
+	- Configuration(.conf): global definitions of variables
+	- Classes(.bbclass): encapsulation and inheritance of build logic, packaging, etc.
+	- Recipes(.bb): the logical units of sofeware/images to build
+
+
+## Setting Up to Use the Yocto Project
+
 The following list shows the required packages needed to build an image that runs on QEMU in graphical mode (e.g. essential plus graphics support). For lists of required packages for other scenarios, see the "Required Packages for the Host Development System" section in the Yocto Project Reference Manual.
 
 	Ubuntu and Debian
@@ -90,11 +106,12 @@ The following steps show how easy it is to set up to build an image for a new ma
 
 
 
-# Reference
+## Reference
+
 [Manual](http://www.yoctoproject.org/docs/2.0/mega-manual/mega-manual.html)
 
 [使用 Yocto Project 构建自定义嵌入式 Linux 发行版](http://blog.csdn.net/arnoldlu/article/details/20363243)
 
-
+[Getting Started with the Yocto Project - New Developer Screencast](https://www.youtube.com/watch?v=zNLYanJAQ3s)
 
 

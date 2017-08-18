@@ -1,17 +1,18 @@
+# bitbake 
 
-# Obtaining BitBake
+## Obtaining BitBake
 
 	git clone git://git.openembedded.org/bitbake
 
-# version
+## version
 	peter@peter-ThinkPad-T430:~/work/src/bitbake$ ./bin/bitbake --version
 	BitBake Build Tool Core version 1.31.1
 
-# The Hello World Example
+## The Hello World Example
 
-## Create a Project Directory
+### Create a Project Directory
 
-## Run Bitbake
+### Run Bitbake
 
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ bitbake
 	The BBPATH variable is not set and bitbake did not find a conf/bblayers.conf file in the expected location.
@@ -21,7 +22,7 @@
 
 When you run BitBake, it begins looking for metadata files. The BBPATH variable is what tells BitBake where to look for those files. BBPATH is not set and you need to set it. Without BBPATH, Bitbake cannot find any configuration files (.conf) or recipe files (.bb) at all. BitBake also cannot find the bitbake.conf file. 
 
-## Setting BBPATH
+### Setting BBPATH
 
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ BBPATH="/home/peter/work/examples/hello"
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ export BBPATH
@@ -42,7 +43,7 @@ When you run BitBake, it begins looking for metadata files. The BBPATH variable 
 This sample output shows that BitBake could not find the conf/bitbake.conf file in the project directory. This file is the first thing BitBake must find in order to build a target. And, since the project directory for this example is empty, you need to provide a conf/bitbake.conf file. 	ERROR: Unable to parse conf/bitbake.conf: [Errno 2] file conf/bitbake.conf not found in /home/peter/work/examples/hello
 
 
-## Creating conf/bitbake.conf
+### Creating conf/bitbake.conf
 
 [hello/conf/bitbake.conf](/code_for_post/bitbake/examples/hello/conf/bitbake.conf)
 
@@ -67,7 +68,7 @@ The TMPDIR variable establishes a directory that BitBake uses for build output a
 
 
 
-## Run Bitbake
+### Run Bitbake
 
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ bitbake
 	ERROR: ParseError in configuration INHERITs: Could not inherit file classes/base.bbclass
@@ -75,7 +76,7 @@ The TMPDIR variable establishes a directory that BitBake uses for build output a
 
 In the sample output, BitBake could not find the classes/base.bbclass file. You need to create that file next. 
 
-## Creating classes/base.bbclass
+### Creating classes/base.bbclass
 
 
 BitBake uses class files to provide common code and functionality. The minimally required class for BitBake is the classes/base.bbclass file. The base class is implicitly inherited by every recipe. BitBake looks for the class in the classes directory of the project (i.e hello/classes in this example). 
@@ -95,7 +96,7 @@ The minimal task that BitBake runs is the do_build task. This is all the example
 [hello/conf/bitbake.conf](/code_for_post/bitbake/examples/hello/classes/base.bbclass)
 
 
-## Run Bitbake
+### Run Bitbake
 
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ bitbake
 	Nothing to do.  Use 'bitbake world' to build everything, or run 'bitbake --help' for usage information.
@@ -105,7 +106,7 @@ BitBake is finally reporting no errors. However, you can see that it really does
 
 
 
-## Creating a Layer
+### Creating a Layer
 While it is not really necessary for such a small example, it is good practice to create a layer in which to keep your code separate from the general metadata used by BitBake. Thus, this example creates and uses a layer called "mylayer".
 Note
 	You can find additional information on adding a layer at http://hambedded.org/blog/2012/11/24/from-bitbake-hello-world-to-an-image/#adding-an-example-layer.
@@ -120,7 +121,7 @@ You need to create the recipe file next. Inside your layer at the top-level, use
 [mylayer/printhello.bb](/code_for_post/bitbake/examples/mylayer/printhello.bb)
 
 
-## Run Bitbake With a Target
+### Run Bitbake With a Target
 
 	peter@peter-ThinkPad-T430:~/work/examples/hello$ bitbake printhello
 	ERROR: no recipe files to build, check your BBPATH and BBFILES?
@@ -132,7 +133,7 @@ You need to create the recipe file next. Inside your layer at the top-level, use
 We have created the layer with the recipe and the layer configuration file but it still seems that BitBake cannot find the recipe. BitBake needs a conf/bblayers.conf that lists the layers for the project. Without this file, BitBake cannot find the recipe. 
 
 
-## Creating conf/bblayers.conf
+### Creating conf/bblayers.conf
 
 BitBake uses the conf/bblayers.conf file to locate layers needed for the project. This file must reside in the conf directory of the project (i.e. hello/conf for this example).
 
@@ -162,13 +163,14 @@ Set your working directory to the hello/conf directory and then create the bblay
 
 
 
-### Note
+#### Note
 
 	After the first execution, re-running bitbake printhello again will not result in a BitBake run that prints the same console output. The reason for this is that the first time the printhello.bb recipe's do_build task executes successfully, BitBake writes a stamp file for the task. Thus, the next time you attempt to run the task using that same bitbake command, BitBake notices the stamp and therefore determines that the task does not need to be re-run. If you delete the tmp directory or run bitbake -c clean printhello and then re-run the build, the "Hello, World!" message will be printed again.
 
 
 
-# Reference
+## Reference
+
 [Manual](http://www.yoctoproject.org/docs/2.0/bitbake-user-manual/bitbake-user-manual.html)
 
 

@@ -1,10 +1,14 @@
+# Understanding the Linux Virtual Memory Manager
 
 
-# Describing Physical Memory
+## 3 Page Table Management
+
+## Describing Physical Memory
 
 
 [![relationship-between-nodes-zones-and-pages.png](https://s19.postimg.org/ud1eskh1v/relationship-between-nodes-zones-and-pages.png)](https://postimg.org/image/luryo8aj3/)
 
+```c
 	/*
 	 * On NUMA machines, each NUMA node would have a pg_data_t to describe
 	 * it's memory layout. On UMA machines there is a single pglist_data which
@@ -23,7 +27,7 @@
 		struct bootmem_data *bdata;
 	#endif
 	} pg_data_t;
-
+```
 
 
 
@@ -52,6 +56,8 @@ e.g /proc/3981/maps
 
 If the region is backed by a file, the struct file is available through the vm_file field which has a pointer to the struct inode. The inode is used to get the struct address_space which has all the private information about the file including a set of pointers to filesystem functions which perform the filesystem specific operations such as reading and writing pages to disk.
 
+```c
+
 	./include/linux/mm_types.h
 
 	struct vm_area_struct {
@@ -69,6 +75,9 @@ If the region is backed by a file, the struct file is available through the vm_f
 	struct inode {
 		struct address_space	*i_mapping;
 	};
+```
+
+
 
 [![process_address_space_structures.png](https://s19.postimg.org/r1h5v64r7/process_address_space_structures.png)](https://postimg.org/image/greqvxevj/)
 
@@ -76,7 +85,8 @@ If the region is backed by a file, the struct file is available through the vm_f
 
 
 
-# Reference
+
+## Reference
 
 [Understanding the Linux Virtual Memory Manager](https://www.kernel.org/doc/gorman/html/understand/)
 
