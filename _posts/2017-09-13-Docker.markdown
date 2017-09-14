@@ -9,7 +9,6 @@
 
 ## Reference
 
-[Understanding the Linux Virtual Memory Manager](https://www.kernel.org/doc/gorman/html/understand/)
 
 
 
