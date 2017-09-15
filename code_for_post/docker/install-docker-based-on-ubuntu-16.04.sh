@@ -1,6 +1,8 @@
 #!/bin/bash
 # refer to https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#install-using-the-repository
 
+set -x # for debug
+
 # Uninstall old versions
 sudo apt-get remove docker docker-engine docker.io
 
@@ -26,7 +28,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 
 # Verify that you now have the key with the fingerprint 9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88, by searching for the last 8 characters of the fingerprint.
-# $ sudo apt-key fingerprint 0EBFCD88
+sudo apt-key fingerprint 0EBFCD88
 
 
 

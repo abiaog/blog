@@ -3,11 +3,39 @@
 
 ## Get Docker CE for Ubuntu(16.04)
 
-[install-docker-based-on-ubuntu-16.04.sh](/code_for_post/docker/install-docker-based-on-ubuntu-16.04.sh)
+[install-docker-based-on-ubuntu-16.04.sh](/blog/code_for_post/docker/install-docker-based-on-ubuntu-16.04.sh)
 
+
+# Build the app
+
+[Dockerfile](/blog/code_for_post/docker/friendlyhello/Dockerfile)
+[app.py](/blog/code_for_post/docker/friendlyhello/app.py)
+[requirements.txt](/blog/code_for_post/docker/friendlyhello/requirements.txt)
+
+
+## We are ready to build the app. Make sure you are still at the top level of your new directory. Here’s what ls should show:
+
+	peter@peter-VirtualBox:~/work/src/blog/code_for_post/docker/friendlyhello$ ll
+	total 20
+	drwxrwxr-x 2 peter peter 4096 9月  15 16:43 ./
+	drwxrwxr-x 3 peter peter 4096 9月  15 16:42 ../
+	-rw-rw-r-- 1 peter peter  665 9月  15 16:34 app.py
+	-rw-rw-r-- 1 peter peter  482 9月  15 16:33 Dockerfile
+	-rw-rw-r-- 1 peter peter   12 9月  15 16:34 requirements.txt
+
+## Now run the build command. This creates a Docker image, which we’re going to tag using -t so it has a friendly name.
+
+	docker build -t friendlyhello .
+
+## Where is your built image? It’s in your machine’s local Docker image registry:
+
+	docker images
 
 
 ## Reference
+
+[Containers](https://docs.docker.com/get-started/part2/)
+
 
 
 
