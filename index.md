@@ -1,8 +1,4 @@
-# Project Management
-
-## Project Management Programming
-
-taskjuggler + Python(pywin32, matplotlib, csv) + Markup
+# Project Management 
 
 [Project-Management-Programming](https://abiaog.github.io/blog/2019/03/27/Project-Management-Programming.html)
 
