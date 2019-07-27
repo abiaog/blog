@@ -6,3 +6,4 @@ git add \
 
 git commit -m"pmp"
 git push
+git diff
