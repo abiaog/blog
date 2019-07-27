@@ -3,8 +3,8 @@
 git add \
 	_posts/2016-02-12-rootfs.markdown \
 	_posts/2016-02-12-vim-introduction.markdown \ 
-	_posts/2016-02-12-welcome-to-jekyll.markdown                              \ 
-	_posts/2016-02-13-c++-Multiple-and-Virtual-Inheritance.markdown           \ 
+	_posts/2016-02-12-welcome-to-jekyll.markdown \ 
+	_posts/2016-02-13-c++-Multiple-and-Virtual-Inheritance.markdown \ 
 	_posts/2016-02-13-Markdown.markdown                                       \ 
 	_posts/2016-02-14-device-tree.markdown                                    \ 
 	_posts/2016-02-14-u-boot.markdown                                         \ 
