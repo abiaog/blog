@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git add \ 
+git add \
 	_posts/2016-02-12-rootfs.markdown \ 
 	_posts/2016-02-12-vim-introduction.markdown                               \ 
 	_posts/2016-02-12-welcome-to-jekyll.markdown                              \ 
