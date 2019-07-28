@@ -1,8 +1,7 @@
+# Project Management Programming
 
-## Project Management Programming
 
-
-# TaskJuggler
+## TaskJuggler
 
 [TaskJuggler Official Site](http://taskjuggler.org/)
 
