@@ -5,6 +5,7 @@
 On Ubuntu, you can get these tools by running:
 
 	sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
+	sudo apt-get install libelf-dev # for fixing a warning
 
 Downloading the latest stable tree
 
