@@ -6,7 +6,7 @@
 ## Alternative 1
 
 
-According to https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel
+According to [[https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel]]
 
 	sudo apt-get build-dep linux linux-image-$(uname -r)
 	sudo apt-get install libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf
