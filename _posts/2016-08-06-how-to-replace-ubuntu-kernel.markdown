@@ -2,6 +2,36 @@
 
 # Replace Ubuntu Kernel
 
+
+## Alternative 1
+
+
+According to https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel
+
+	sudo apt-get build-dep linux linux-image-$(uname -r)
+	sudo apt-get install libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf
+	apt-get source linux-image-unsigned-$(uname -r)
+
+	LANG=C fakeroot debian/rules clean
+	# quicker build:
+	LANG=C fakeroot debian/rules binary-headers binary-generic binary-perarch
+
+
+### For solving dependencies errors while executing "sudo apt-get build-dep linux linux-image-$(uname -r)"
+Edit source.list
+	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse
+	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse
+	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse
+	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse
+	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse
+	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse
+	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse
+	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse
+	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse
+	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-proposed main restricted universe multiverse
+	deb http://archive.ubuntu.com/ubuntu/ trusty main universe restricted multiverse
+
+## Alternative 2
 On Ubuntu, you can get these tools by running:
 
 	sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
