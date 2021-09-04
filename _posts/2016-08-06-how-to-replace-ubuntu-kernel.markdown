@@ -18,7 +18,9 @@ According to [BuildYourOwnKernel](https://wiki.ubuntu.com/Kernel/BuildYourOwnKer
 
 
 ### For solving dependencies errors while executing "sudo apt-get build-dep linux linux-image-$(uname -r)"
+
 Edit source.list
+
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse
 	deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse
