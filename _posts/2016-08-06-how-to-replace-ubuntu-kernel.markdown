@@ -16,6 +16,10 @@ According to [BuildYourOwnKernel](https://wiki.ubuntu.com/Kernel/BuildYourOwnKer
 	# quicker build:
 	LANG=C fakeroot debian/rules binary-headers binary-generic binary-perarch
 
+	cd ..
+	ls *.deb
+	sudo dpkg -i *.deb
+	sudo reboot
 
 ### For solving dependencies errors while executing "sudo apt-get build-dep linux linux-image-$(uname -r)"
 
