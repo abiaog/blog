@@ -38,4 +38,14 @@ ELF Header:
   Size of section headers:           64 (bytes)
   Number of section headers:         29
   Section header string table index: 28
+
+
+
+$ od -Ax -t x1 -N 64 main
+000000 7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+000010 03 00 3e 00 01 00 00 00 50 06 00 00 00 00 00 00
+000020 40 00 00 00 00 00 00 00 48 19 00 00 00 00 00 00
+000030 00 00 00 00 40 00 38 00 09 00 40 00 1d 00 1c 00
+000040
+
 ```
